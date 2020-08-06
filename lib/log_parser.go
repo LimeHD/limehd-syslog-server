@@ -84,6 +84,11 @@ type (
 		index   string
 		prefix  string
 	}
+
+	ParserConfig struct {
+		PartsDelim  string
+		StreamDelim string
+	}
 )
 
 func NewSyslogParser(logger Logger) SyslogParser {
@@ -92,14 +97,14 @@ func NewSyslogParser(logger Logger) SyslogParser {
 	}
 }
 
-func (s SyslogParser) Parse(parts format.LogParts, delim string) (Log, error) {
+func (s SyslogParser) Parse(parts format.LogParts, config ParserConfig) (Log, error) {
 	s._dirty = s.toSlice(parts)
 
 	if s._dirty.size() == 0 {
 		return Log{}, errors.New("It seems to be missing any logs")
 	}
 
-	_logFormatParts := strings.Split(s._dirty.content, delim)
+	_logFormatParts := strings.Split(s._dirty.content, config.PartsDelim)
 
 	if s._logger.IsDevelopment() {
 		for k, v := range _logFormatParts {
@@ -118,7 +123,7 @@ func (s SyslogParser) Parse(parts format.LogParts, delim string) (Log, error) {
 	}
 
 	// example: /streaming/domashniy/324/vh1w/playlist.m3u8
-	__splitUri := _safeSplitUri(_logFormatParts[constants.POS_URI])
+	__splitUri := _safeSplitUri(_logFormatParts[constants.POS_URI], config.StreamDelim)
 
 	_req._splitUri = _splitUri{
 		channel: constants.UNKNOWN,
@@ -237,8 +242,8 @@ func _safeStringToInt(value string) int {
 	return converted
 }
 
-func _safeSplitUri(uri string) []string {
-	return strings.Split(uri, constants.REQUEST_URI_DELIM)
+func _safeSplitUri(uri string, delim string) []string {
+	return strings.Split(uri, delim)
 }
 
 func _getOrUnknown(value string) string {

@@ -12,25 +12,30 @@ type Logger interface {
 	Close()
 }
 
+type LoggerConfig struct {
+	Logfile string
+	IsDev   bool
+}
+
 type FileLogger struct {
 	handler *os.File
 	isDev   bool
 }
 
-func NewFileLogger(logfile string, isDev bool) FileLogger {
-	file, err := _createFileLogger(logfile)
+func NewFileLogger(config LoggerConfig) FileLogger {
+	file, err := _createFileLogger(config.Logfile)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if !isDev {
+	if !config.IsDev {
 		log.SetOutput(file)
 	}
 
 	return FileLogger{
 		handler: file,
-		isDev:   isDev,
+		isDev:   config.IsDev,
 	}
 }
 
