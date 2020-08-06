@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
-	"gopkg.in/mcuadros/go-syslog.v2"
+	"github.com/LimeHD/limehd-syslog-server/constants"
+	"github.com/LimeHD/limehd-syslog-server/lib"
 	"github.com/urfave/cli"
+	"gopkg.in/mcuadros/go-syslog.v2"
 	"os"
 )
 
@@ -12,25 +14,25 @@ func main() {
 	app := &cli.App{
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:   "dev",
-				Usage:  "Is development mode run?",
+				Name:  "dev",
+				Usage: "Is development mode run?",
 			},
 			&cli.StringFlag{
-				Name:   "address",
-				Usage:  "host & port",
-				Value:  "",
+				Name:  "address",
+				Usage: "host & port",
+				Value: "",
 			},
 			&cli.StringFlag{
-				Name:   "log",
-				Usage:  "Log output file",
-				Value:  "./tmp/log",
+				Name:  "log",
+				Usage: "Log output file",
+				Value: constants.DEFAULT_LOG_FILE,
 			},
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
 		var err error
-		fileLogger := NewFileLogger(c.String("log"), c.Bool("dev"))
+		fileLogger := lib.NewFileLogger(c.String("log"), c.Bool("dev"))
 		defer fileLogger.Close()
 
 		fileLogger.InfoLog("LimeHD Syslog Server v0.1.0")
@@ -58,12 +60,23 @@ func main() {
 			fileLogger.ErrorLog(err)
 		}
 
+		parser := lib.NewSyslogParser(fileLogger)
+
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
-				if fileLogger.IsDevelopment() {
-					fmt.Println(logParts)
+				result, err := parser.Parse(logParts, constants.LOG_DELIM)
+
+				if err != nil {
+					fileLogger.ErrorLog(err)
 				}
 
+				// пока для примера
+				fmt.Println(result.GetBytesSent())
+				fmt.Println(result.GetStreamingServer())
+				fmt.Println(result.GetChannel())
+				fmt.Println(result.GetQuality())
+				fmt.Println(result.GetBytesSent())
+				fmt.Println(result.GetRemoteAddr())
 			}
 		}(channel)
 
