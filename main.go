@@ -65,14 +65,14 @@ func main() {
 			fileLogger.ErrorLog(err)
 		}
 
-		parser := lib.NewSyslogParser(fileLogger)
+		parser := lib.NewSyslogParser(fileLogger, lib.ParserConfig{
+			PartsDelim:  constants.LOG_DELIM,
+			StreamDelim: constants.REQUEST_URI_DELIM,
+		})
 
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
-				result, err := parser.Parse(logParts, lib.ParserConfig{
-					PartsDelim:  constants.LOG_DELIM,
-					StreamDelim: constants.REQUEST_URI_DELIM,
-				})
+				result, err := parser.Parse(logParts)
 
 				if err != nil {
 					fileLogger.ErrorLog(err)

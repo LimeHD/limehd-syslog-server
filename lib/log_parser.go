@@ -13,6 +13,7 @@ type (
 	SyslogParser struct {
 		_dirty  _logSlice
 		_logger Logger
+		config  ParserConfig
 	}
 
 	Log struct {
@@ -91,20 +92,21 @@ type (
 	}
 )
 
-func NewSyslogParser(logger Logger) SyslogParser {
+func NewSyslogParser(logger Logger, config ParserConfig) SyslogParser {
 	return SyslogParser{
 		_logger: logger,
+		config:  config,
 	}
 }
 
-func (s SyslogParser) Parse(parts format.LogParts, config ParserConfig) (Log, error) {
+func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	s._dirty = s.toSlice(parts)
 
 	if s._dirty.size() == 0 {
 		return Log{}, errors.New("It seems to be missing any logs")
 	}
 
-	_logFormatParts := strings.Split(s._dirty.content, config.PartsDelim)
+	_logFormatParts := strings.Split(s._dirty.content, s.config.PartsDelim)
 
 	if s._logger.IsDevelopment() {
 		for k, v := range _logFormatParts {
@@ -123,7 +125,7 @@ func (s SyslogParser) Parse(parts format.LogParts, config ParserConfig) (Log, er
 	}
 
 	// example: /streaming/domashniy/324/vh1w/playlist.m3u8
-	__splitUri := _safeSplitUri(_logFormatParts[constants.POS_URI], config.StreamDelim)
+	__splitUri := _safeSplitUri(_logFormatParts[constants.POS_URI], s.config.StreamDelim)
 
 	_req._splitUri = _splitUri{
 		channel: constants.UNKNOWN,
