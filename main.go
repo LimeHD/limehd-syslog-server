@@ -32,7 +32,12 @@ func main() {
 
 	app.Action = func(c *cli.Context) error {
 		var err error
-		fileLogger := lib.NewFileLogger(c.String("log"), c.Bool("dev"))
+
+		fileLogger := lib.NewFileLogger(lib.LoggerConfig{
+			Logfile: c.String("log"),
+			IsDev:   c.Bool("dev"),
+		})
+
 		defer fileLogger.Close()
 
 		fileLogger.InfoLog("LimeHD Syslog Server v0.1.0")
@@ -64,7 +69,10 @@ func main() {
 
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
-				result, err := parser.Parse(logParts, constants.LOG_DELIM)
+				result, err := parser.Parse(logParts, lib.ParserConfig{
+					PartsDelim:  constants.LOG_DELIM,
+					StreamDelim: constants.REQUEST_URI_DELIM,
+				})
 
 				if err != nil {
 					fileLogger.ErrorLog(err)
