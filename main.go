@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+const version = "0.1.0"
+
 func main() {
 	app := &cli.App{
 		Flags: []cli.Flag{
@@ -33,17 +35,20 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		var err error
 
-		fileLogger := lib.NewFileLogger(lib.LoggerConfig{
+		logger := lib.NewFileLogger(lib.LoggerConfig{
 			Logfile: c.String("log"),
 			IsDev:   c.Bool("dev"),
 		})
 
-		defer fileLogger.Close()
+		defer logger.Close()
 
-		fileLogger.InfoLog("LimeHD Syslog Server v0.1.0")
+		startupMessage := fmt.Sprintf("LimeHD Syslog Server v%s", version)
+		logger.InfoLog(startupMessage)
+		// заодно выведем и на stdout
+		fmt.Println(startupMessage)
 
 		if len(c.String("address")) == 0 {
-			fileLogger.ErrorLog(errors.New("Address is not defined"))
+			logger.ErrorLog(errors.New("Address is not defined"))
 		}
 
 		channel := make(syslog.LogPartsChannel)
@@ -56,16 +61,16 @@ func main() {
 		err = server.ListenUDP(c.String("address"))
 
 		if err != nil {
-			fileLogger.ErrorLog(err)
+			logger.ErrorLog(err)
 		}
 
 		err = server.Boot()
 
 		if err != nil {
-			fileLogger.ErrorLog(err)
+			logger.ErrorLog(err)
 		}
 
-		parser := lib.NewSyslogParser(fileLogger, lib.ParserConfig{
+		parser := lib.NewSyslogParser(logger, lib.ParserConfig{
 			PartsDelim:  constants.LOG_DELIM,
 			StreamDelim: constants.REQUEST_URI_DELIM,
 		})
@@ -75,7 +80,7 @@ func main() {
 				result, err := parser.Parse(logParts)
 
 				if err != nil {
-					fileLogger.ErrorLog(err)
+					logger.ErrorLog(err)
 				}
 
 				// пока для примера

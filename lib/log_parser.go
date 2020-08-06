@@ -11,9 +11,9 @@ import (
 
 type (
 	SyslogParser struct {
-		_dirty  _logSlice
-		_logger Logger
-		config  ParserConfig
+		_dirty _logSlice
+		logger Logger
+		config ParserConfig
 	}
 
 	Log struct {
@@ -94,8 +94,8 @@ type (
 
 func NewSyslogParser(logger Logger, config ParserConfig) SyslogParser {
 	return SyslogParser{
-		_logger: logger,
-		config:  config,
+		logger: logger,
+		config: config,
 	}
 }
 
@@ -108,9 +108,9 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 
 	_logFormatParts := strings.Split(s._dirty.content, s.config.PartsDelim)
 
-	if s._logger.IsDevelopment() {
+	if s.logger.IsDevelopment() {
 		for k, v := range _logFormatParts {
-			s._logger.InfoLog(fmt.Sprintf("%d => %v", k, v))
+			s.logger.InfoLog(fmt.Sprintf("%d => %v", k, v))
 		}
 	}
 
@@ -122,19 +122,13 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 		requestMethod:  "",
 		args:           "",
 		requestTime:    "",
+		_splitUri:      s.defaultStreamUri(),
 	}
 
 	// example: /streaming/domashniy/324/vh1w/playlist.m3u8
 	__splitUri := _safeSplitUri(_logFormatParts[constants.POS_URI], s.config.StreamDelim)
 
-	_req._splitUri = _splitUri{
-		channel: constants.UNKNOWN,
-		quality: constants.UNKNOWN,
-		index:   constants.UNKNOWN,
-		prefix:  constants.UNKNOWN,
-	}
-
-	if len(__splitUri) == constants.LEN_STREAM_PARTS {
+	if s.isStreamUri(__splitUri) {
 		_req._splitUri = _splitUri{
 			prefix:  __splitUri[1],
 			channel: __splitUri[2],
@@ -179,6 +173,23 @@ func (s SyslogParser) toSlice(parts format.LogParts) _logSlice {
 		content:  _safeInterfaceToString(parts["content"]),
 		tag:      _safeInterfaceToString(parts["tag"]),
 		hostname: _safeInterfaceToString(parts["hostname"]),
+	}
+}
+
+func (s SyslogParser) isStreamUri(splitUri []string) bool {
+	if len(splitUri) == constants.LEN_STREAM_PARTS {
+		return true
+	}
+
+	return false
+}
+
+func (s SyslogParser) defaultStreamUri() _splitUri {
+	return _splitUri{
+		channel: constants.UNKNOWN,
+		quality: constants.UNKNOWN,
+		index:   constants.UNKNOWN,
+		prefix:  constants.UNKNOWN,
 	}
 }
 

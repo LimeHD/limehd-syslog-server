@@ -22,7 +22,7 @@ type FileLogger struct {
 	isDev   bool
 }
 
-func NewFileLogger(config LoggerConfig) FileLogger {
+func NewFileLogger(config LoggerConfig) Logger {
 	file, err := _createFileLogger(config.Logfile)
 
 	if err != nil {
