@@ -1,4 +1,4 @@
-# syslog сервер который собирает статистику с nginx серверов и складывае ее в influxdb
+## syslog сервер который собирает статистику с nginx серверов и складывае ее в influxdb
 
 ### Запуск
 
@@ -33,24 +33,24 @@
       ```
     </details>
 
-## Боевой сервер
+### Боевой сервер
 
 * influx-host: `influx.iptv2022.com`
 * database: `polina`
 
-## Метрики
+### Метрики
 
 * [ ] Трафик (`value` в measurement `bytes_sent`)
 * [ ] online-пользователи (`value` в measurement `connections`)
 
-## Тэги
+### Тэги
 
 * `country_id` - ID страны из [maxmind](https://dev.maxmind.com/geoip/legacy/codes/iso3166/)
 * `channel`
 * `streaming_server`
 * `quality`
 
-# Схема
+### Схема
 
 ```
 +------------------------+                   +-------------------------+
@@ -71,7 +71,7 @@
 ```
 
 
-# Формат
+### Формат
 
 ```
 29/Apr/2020:21:21:14 +0300|1588184474.870|83.219.236.137|HTTP/1.1|GET|mhd.limehd.tv|/streaming/domashniy/324/vh1w/playlist.m3u8|-|206|4004|0.000|-|-|-|-|-|-|Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.34 Safari/537.36 WebAppManager|-|1|2313149490
