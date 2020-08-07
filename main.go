@@ -32,7 +32,7 @@ func main() {
 			&cli.StringFlag{
 				Name:  "maxmind",
 				Usage: "MaxMind .mmdb database file",
-				Value: "/usr/share/GeoIP/GeoLite2-City.mmdb",
+				Value: constants.DEFAULT_MAXMIND_DATABASE,
 			},
 			&cli.StringFlag{
 				Name:  "influx-host",

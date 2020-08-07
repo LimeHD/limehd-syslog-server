@@ -12,6 +12,7 @@ const EMPTY_VALUE = "-"
 const LEN_STREAM_PARTS = 6
 
 const DEFAULT_LOG_FILE = "./tmp/log"
+const DEFAULT_MAXMIND_DATABASE = "/usr/share/GeoIP/GeoLite2-City.mmdb"
 
 // константы частей лога, всего из 22 в качестве значений указываются ИНДЕКСЫ 0..21
 
