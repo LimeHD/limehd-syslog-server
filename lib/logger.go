@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -57,4 +58,13 @@ func (f FileLogger) Close() {
 
 func (f FileLogger) IsDevelopment() bool {
 	return f.isDev
+}
+
+func StartupMessge(message string, logger Logger) {
+	logger.InfoLog(message)
+	// заодно выведем и на stdout
+
+	if !logger.IsDevelopment() {
+		fmt.Println(message)
+	}
 }

@@ -29,6 +29,10 @@ func main() {
 				Usage: "Log output file",
 				Value: constants.DEFAULT_LOG_FILE,
 			},
+			&cli.StringFlag{
+				Name:  "mmdb",
+				Usage: "Maxmind mmdb database file",
+			},
 		},
 	}
 
@@ -42,10 +46,18 @@ func main() {
 
 		defer logger.Close()
 
-		startupMessage := fmt.Sprintf("LimeHD Syslog Server v%s", version)
-		logger.InfoLog(startupMessage)
-		// заодно выведем и на stdout
-		fmt.Println(startupMessage)
+		lib.StartupMessge(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
+
+		geoFinder, err := lib.NewGeoFinder(lib.GeoFinderConfig{
+			MmdbPath: c.String("mmdb"),
+			Logger:   logger,
+		})
+
+		if err != nil {
+			logger.ErrorLog(err)
+		}
+
+		defer geoFinder.Close()
 
 		if len(c.String("address")) == 0 {
 			logger.ErrorLog(errors.New("Address is not defined"))
@@ -90,6 +102,14 @@ func main() {
 				fmt.Println(result.GetQuality())
 				fmt.Println(result.GetBytesSent())
 				fmt.Println(result.GetRemoteAddr())
+
+				finderResult, err := geoFinder.Find(result.GetRemoteAddr())
+
+				if err != nil {
+					logger.ErrorLog(err)
+				}
+
+				fmt.Println(finderResult.GetCountryGeoId())
 			}
 		}(channel)
 
