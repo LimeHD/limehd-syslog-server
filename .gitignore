@@ -2,3 +2,4 @@ limehd-syslog-server
 .idea
 tmp/log
 *.log
+*.mmdb
