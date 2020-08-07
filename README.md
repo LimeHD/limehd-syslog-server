@@ -2,6 +2,7 @@
 
 ### Запуск
 
+`$ go run . --help`
 `$ go run . --dev --address 0.0.0.0:514 --log ./tmp/log --mmdb ./GeoLite2-City.mmdb`, аргументы:
 
 - `--dev` - режим отладки, вывод в консоль служебной инфы
