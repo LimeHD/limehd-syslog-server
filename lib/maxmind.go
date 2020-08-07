@@ -106,3 +106,7 @@ func (g GeoFinder) _openDabase(mmdbPath string) (*geoip2.Reader, error) {
 func (g GeoFinder) Close() {
 	_ = g.reader.Close()
 }
+
+func (g GeoFinder) CloseMessage() string {
+	return "Close MaxMind"
+}

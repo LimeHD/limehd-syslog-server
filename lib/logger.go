@@ -60,6 +60,10 @@ func (f FileLogger) IsDevelopment() bool {
 	return f.isDev
 }
 
+func (f FileLogger) CloseMessage() string {
+	return "Close File logger"
+}
+
 func StartupMessge(message string, logger Logger) {
 	logger.InfoLog(message)
 	// заодно выведем и на stdout

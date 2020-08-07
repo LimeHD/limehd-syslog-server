@@ -45,8 +45,6 @@ func main() {
 			IsDev:   c.Bool("dev"),
 		})
 
-		defer logger.Close()
-
 		lib.StartupMessge(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
 
 		geoFinder, err := lib.NewGeoFinder(lib.GeoFinderConfig{
@@ -58,11 +56,15 @@ func main() {
 			logger.ErrorLog(err)
 		}
 
-		defer geoFinder.Close()
-
 		if len(c.String("address")) == 0 {
 			logger.ErrorLog(errors.New("Address is not defined"))
 		}
+
+		lib.Notifier(
+			logger,
+			geoFinder,
+			// influx
+		)
 
 		channel := make(syslog.LogPartsChannel)
 		handler := syslog.NewChannelHandler(channel)
