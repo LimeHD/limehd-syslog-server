@@ -34,6 +34,14 @@ func main() {
 				Usage: "MaxMind .mmdb database file",
 				Value: "/usr/share/GeoIP/GeoLite2-City.mmdb",
 			},
+			&cli.StringFlag{
+				Name:  "influx-host",
+				Usage: "InfluxDB connection string",
+			},
+			&cli.StringFlag{
+				Name:  "influx-db",
+				Usage: "InfluxDB database name",
+			},
 		},
 	}
 
@@ -60,10 +68,20 @@ func main() {
 			logger.ErrorLog(errors.New("Address is not defined"))
 		}
 
+		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
+			Addr:     c.String("influx-host"),
+			Database: c.String("influx-db"),
+			Logger:   logger,
+		})
+
+		if err != nil {
+			logger.ErrorLog(err)
+		}
+
 		lib.Notifier(
 			logger,
 			geoFinder,
-			// influx
+			influx,
 		)
 
 		channel := make(syslog.LogPartsChannel)
@@ -99,20 +117,37 @@ func main() {
 				}
 
 				// пока для примера
-				fmt.Println(result.GetBytesSent())
 				fmt.Println(result.GetStreamingServer())
 				fmt.Println(result.GetChannel())
 				fmt.Println(result.GetQuality())
 				fmt.Println(result.GetBytesSent())
 				fmt.Println(result.GetRemoteAddr())
+				fmt.Println(result.GetConnections())
 
-				finderResult, err := geoFinder.Find(result.GetRemoteAddr())
+				finderResult, err := geoFinder.Find("89.191.131.243")
 
 				if err != nil {
 					logger.ErrorLog(err)
 				}
 
 				fmt.Println(finderResult.GetCountryGeoId())
+
+				err = influx.Point(lib.InfluxRequestParams{
+					InfluxRequestTags: lib.InfluxRequestTags{
+						CountryId:    finderResult.GetCountryGeoId(),
+						Channel:      result.GetChannel(),
+						StreamServer: result.GetStreamingServer(),
+						Quality:      result.GetQuality(),
+					},
+					InfluxRequestFields: lib.InfluxRequestFields{
+						BytesSent:   result.GetBytesSent(),
+						Connections: result.GetConnections(),
+					},
+				})
+
+				if err != nil {
+					logger.ErrorLog(err)
+				}
 			}
 		}(channel)
 

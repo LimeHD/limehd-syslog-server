@@ -63,7 +63,7 @@ type (
 	}
 
 	_connection struct {
-		connectionRequests string
+		connectionRequests int
 		connection         string
 	}
 
@@ -160,8 +160,8 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 			sentHttpXProfile:  _getOrUnknown(_logFormatParts[constants.POST_HTTP_SENT_X]),
 		},
 		_connection: _connection{
-			connectionRequests: "",
-			connection:         "",
+			connectionRequests: _safeStringToInt(_logFormatParts[constants.POS_CONNECTION_REQUESTS]),
+			connection:         _logFormatParts[constants.POS_CONNECTIONS],
 		},
 		bytesSent: _safeStringToInt(_logFormatParts[constants.POS_BYTES_SENT]),
 	}, nil
@@ -194,6 +194,10 @@ func (s SyslogParser) defaultStreamUri() _splitUri {
 }
 
 // export getters
+
+func (l Log) GetConnections() int {
+	return l.connectionRequests
+}
 
 func (l Log) GetBytesSent() int {
 	return l.bytesSent

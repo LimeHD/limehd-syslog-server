@@ -3,12 +3,35 @@
 ### Запуск
 
 `$ go run . --help`
-`$ go run . --dev --address 0.0.0.0:514 --log ./tmp/log --maxmind ./GeoLite2-City.mmdb`, аргументы:
 
-- `--dev` - режим отладки, вывод в консоль служебной инфы
-- `--address` - адрес для подключения по UPD к syslog
-- `--log` - файл, куда складываются служебной инфы, если не включен режим отладки, по-умолчанию `./tmp/log`
-- `--maxmind` - база данных MaxMind
+`$ go run . --dev --address 0.0.0.0:514 --maxmind ./GeoLite2-City.mmdb --influx-host http://0.0.0.0:8086 --influx-db polina`, аргументы:
+
+#### Подробности для разработки
+
+- Собрать influx: `$ docker run -p 8086:8086 -d --name influx_docker --rm -v $PWD:/var/lib/influxdb -v $PWD:/var/lib/influxdb influxdb`
+- Посмотреть результаты: 
+    - `$ docker run --rm --link=influx_docker -it influxdb influx -host influx_docker`
+    - `> create database polina`
+    - `> show databases`
+    - `> use polina`
+    - `> select * from syslog`
+    
+    <details>
+      <summary>Output</summary>
+      
+      ```shell script
+        > select * from syslog
+        name: syslog
+        time                bytes_sent channel   connections country_id quality streaming_server
+        ----                ---------- -------   ----------- ---------- ------- ----------------
+        1596799651430918846 404        domashniy 154                   vh1w    syslog-server.local
+        1596799652461060025 404        domashniy 154                   vh1w    syslog-server.local
+        1596799653820469346 404        domashniy 154                   vh1w    syslog-server.local
+        1596799654459295760 404        domashniy 154                   vh1w    syslog-server.local
+        1596799655117672443 404        domashniy 154                   vh1w    syslog-server.local
+        ...
+      ```
+    </details>
 
 ## Боевой сервер
 
