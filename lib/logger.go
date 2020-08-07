@@ -9,6 +9,7 @@ import (
 type Logger interface {
 	ErrorLog(error error)
 	InfoLog(msg interface{})
+	WarningLog(msg interface{})
 	IsDevelopment() bool
 	Close()
 }
@@ -52,6 +53,10 @@ func (f FileLogger) InfoLog(msg interface{}) {
 	log.Printf("[LIMEHD SYSLOG INFO]: %v", msg)
 }
 
+func (f FileLogger) WarningLog(msg interface{}) {
+	log.Printf("[LIMEHD SYSLOG WARNING]: %v", msg)
+}
+
 func (f FileLogger) Close() {
 	_ = f.handler.Close()
 }
@@ -64,7 +69,7 @@ func (f FileLogger) CloseMessage() string {
 	return "Close File logger"
 }
 
-func StartupMessge(message string, logger Logger) {
+func StartupMessage(message string, logger Logger) {
 	logger.InfoLog(message)
 	// заодно выведем и на stdout
 

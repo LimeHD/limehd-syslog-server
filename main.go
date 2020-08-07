@@ -53,7 +53,7 @@ func main() {
 			IsDev:   c.Bool("dev"),
 		})
 
-		lib.StartupMessge(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
+		lib.StartupMessage(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
 
 		geoFinder, err := lib.NewGeoFinder(lib.GeoFinderConfig{
 			MmdbPath: c.String("maxmind"),
@@ -114,16 +114,18 @@ func main() {
 
 				if err != nil {
 					if !logger.IsDevelopment() {
+						logger.WarningLog(err)
 						continue
 					}
 
 					logger.ErrorLog(err)
 				}
 
-				finderResult, err := geoFinder.Find("89.191.131.243")
+				finderResult, err := geoFinder.Find(result.GetRemoteAddr())
 
 				if err != nil {
 					if !logger.IsDevelopment() {
+						logger.WarningLog(err)
 						continue
 					}
 
@@ -145,6 +147,7 @@ func main() {
 
 				if err != nil {
 					if !logger.IsDevelopment() {
+						logger.WarningLog(err)
 						continue
 					}
 
