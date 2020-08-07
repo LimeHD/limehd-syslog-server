@@ -30,8 +30,9 @@ func main() {
 				Value: constants.DEFAULT_LOG_FILE,
 			},
 			&cli.StringFlag{
-				Name:  "mmdb",
+				Name:  "maxmind",
 				Usage: "MaxMind .mmdb database file",
+				Value: "/usr/share/GeoIP/GeoLite2-City.mmdb",
 			},
 		},
 	}
@@ -49,7 +50,7 @@ func main() {
 		lib.StartupMessge(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
 
 		geoFinder, err := lib.NewGeoFinder(lib.GeoFinderConfig{
-			MmdbPath: c.String("mmdb"),
+			MmdbPath: c.String("maxmind"),
 			Logger:   logger,
 		})
 

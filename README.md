@@ -3,12 +3,12 @@
 ### Запуск
 
 `$ go run . --help`
-`$ go run . --dev --address 0.0.0.0:514 --log ./tmp/log --mmdb ./GeoLite2-City.mmdb`, аргументы:
+`$ go run . --dev --address 0.0.0.0:514 --log ./tmp/log --maxmind ./GeoLite2-City.mmdb`, аргументы:
 
 - `--dev` - режим отладки, вывод в консоль служебной инфы
 - `--address` - адрес для подключения по UPD к syslog
 - `--log` - файл, куда складываются служебной инфы, если не включен режим отладки, по-умолчанию `./tmp/log`
-- `--mmdb` - база данных MaxMind
+- `--maxmind` - база данных MaxMind
 
 ## Боевой сервер
 
