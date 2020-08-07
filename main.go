@@ -17,21 +17,21 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:  "dev",
-				Usage: "Is development mode run?",
+				Usage: "development mode run",
 			},
 			&cli.StringFlag{
 				Name:  "address",
-				Usage: "host & port",
+				Usage: "host and ip address for connection syslog",
 				Value: "",
 			},
 			&cli.StringFlag{
 				Name:  "log",
-				Usage: "Log output file",
+				Usage: "file for log output",
 				Value: constants.DEFAULT_LOG_FILE,
 			},
 			&cli.StringFlag{
 				Name:  "mmdb",
-				Usage: "Maxmind mmdb database file",
+				Usage: "MaxMind .mmdb database file",
 			},
 		},
 	}
