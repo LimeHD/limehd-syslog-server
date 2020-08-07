@@ -66,23 +66,26 @@ func NewInfluxClient(config InfluxClientConfig) (*InfluxClient, error) {
 	return i, nil
 }
 
+type tags map[string]string
+type fields map[string]interface{}
+
 func (i InfluxClient) Point(params InfluxRequestParams) error {
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 		Database: i.Database,
 	})
 
 	if err != nil {
-		i._logger.InfoLog(err)
+		return err
 	}
 
 	pt, err := i.CreatePoint("syslog",
-		map[string]string{
+		tags{
 			"country_id":       strconv.FormatInt(int64(params.CountryId), 10),
 			"channel":          params.Channel,
 			"streaming_server": params.StreamServer,
 			"quality":          params.Quality,
 		},
-		map[string]interface{}{
+		fields{
 			"bytes_sent":  params.BytesSent,
 			"connections": params.Connections,
 		},
@@ -97,7 +100,7 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 	return nil
 }
 
-func (i InfluxClient) CreatePoint(m string, t map[string]string, f map[string]interface{}) (*client.Point, error) {
+func (i InfluxClient) CreatePoint(m string, t tags, f fields) (*client.Point, error) {
 	return client.NewPoint(m, t, f, time.Now())
 }
 
