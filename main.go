@@ -113,24 +113,22 @@ func main() {
 				result, err := parser.Parse(logParts)
 
 				if err != nil {
+					if !logger.IsDevelopment() {
+						continue
+					}
+
 					logger.ErrorLog(err)
 				}
-
-				// пока для примера
-				fmt.Println(result.GetStreamingServer())
-				fmt.Println(result.GetChannel())
-				fmt.Println(result.GetQuality())
-				fmt.Println(result.GetBytesSent())
-				fmt.Println(result.GetRemoteAddr())
-				fmt.Println(result.GetConnections())
 
 				finderResult, err := geoFinder.Find("89.191.131.243")
 
 				if err != nil {
+					if !logger.IsDevelopment() {
+						continue
+					}
+
 					logger.ErrorLog(err)
 				}
-
-				fmt.Println(finderResult.GetCountryGeoId())
 
 				err = influx.Point(lib.InfluxRequestParams{
 					InfluxRequestTags: lib.InfluxRequestTags{
@@ -146,6 +144,10 @@ func main() {
 				})
 
 				if err != nil {
+					if !logger.IsDevelopment() {
+						continue
+					}
+
 					logger.ErrorLog(err)
 				}
 			}
