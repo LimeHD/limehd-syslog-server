@@ -1,9 +1,9 @@
 lock '3.12.1'
 
-set :application, 'epg_parsers'
-set :user, 'master'
+set :application, 'limehd-syslog-server'
+set :user, 'root'
 
-set :repo_url, 'git@github.com:LimeHD/epg_parsers.git' if ENV['USE_LOCAL_REPO'].nil?
+set :repo_url, 'git@github.com:LimeHD/limehd-syslog-server.git' if ENV['USE_LOCAL_REPO'].nil?
 
 set :linked_files, %w(.env)
 set :linked_dirs, %w(log output)
@@ -18,14 +18,6 @@ set :deploy_to, -> { "/home/#{fetch(:user)}/#{fetch(:application)}" }
 
 namespace :deploy do
   after 'updated', :transfer_build
-  after 'published', :reload_crontab
-  after 'finishing_rollback', :reload_crontab
-end
-
-task :reload_crontab do
-  on release_roles(:app) do
-    execute "cd #{release_path}; crontab -u #{fetch(:user)} ./config/crontab"
-  end
 end
 
 desc 'Transfer build'
