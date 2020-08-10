@@ -1,0 +1,9 @@
+MAILTO="servers@limehd.tv"
+10 2 * * * cd ~/epg_parsers/current; env $(cat ~/epg_parsers/shared/.env | xargs) ./bin/download_graella ~/epg_parsers/shared/output/graella; ./bin/graella_parser ~/epg_parsers/shared/output/graella ~/epg_parsers/shared/output/graella.csv
+17 3 * * * cd ~/epg_parsers/current; ./bin/digea_parser --output ~/epg_parsers/shared/output/digea.csv
+27 3 * * * cd ~/epg_parsers/current; ./bin/ept_parser --output ~/epg_parsers/shared/output/ept.csv
+37 3 * * * cd ~/epg_parsers/current; ./bin/star_parser --output ~/epg_parsers/shared/output/star.csv
+47 3 * * * cd ~/epg_parsers/current; ./bin/alfaomega ~/epg_parsers/shared/output/alfaomega.csv
+57 3 * * * cd ~/epg_parsers/current; env $(cat ~/epg_parsers/shared/.env | xargs) ./bin/download_stv ~/epg_parsers/shared/output/stv_epg.csv && ./bin/stv_parser ~/epg_parsers/shared/output/stv_epg.csv
+07 4 * * * rm -f /home/master/epg_parsers/shared/output/TV_Pack.xml; cd ~/epg_parsers/current; env $(cat ~/epg_parsers/shared/.env | xargs) ./bin/download_tv_pack ~/epg_parsers/shared/output/ && env $(cat ~/epg_parsers/shared/.env | xargs) ./bin/tv_pack_parser ~/epg_parsers/shared/output/TV_Pack.xml
+17 4 * * * cd ~/epg_parsers/current; env $(cat ~/epg_parsers/shared/.env | xargs) ./bin/dvbs_parser ~/epg_parsers/shared/output/dvb_s.csv

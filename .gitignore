@@ -3,3 +3,4 @@ limehd-syslog-server
 tmp/log
 *.log
 *.mmdb
+bin/*
