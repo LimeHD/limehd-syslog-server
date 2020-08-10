@@ -103,7 +103,7 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	s._dirty = s.toSlice(parts)
 
 	if s._dirty.size() == 0 {
-		return Log{}, errors.New("It seems to be missing any logs")
+		return Log{}, errors.New(constants.NOT_RECOGNIZE_LOGS)
 	}
 
 	_logFormatParts := strings.Split(s._dirty.content, s.config.PartsDelim)
