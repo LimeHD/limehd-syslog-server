@@ -16,31 +16,30 @@ func main() {
 	app := &cli.App{
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:  "dev",
-				Usage: "development mode run",
+				Name:  "debug",
+				Usage: "Режим отладки - детализирует этапы работы сервиса, также в данном режиме все логи отправляются в stdout",
 			},
 			&cli.StringFlag{
-				Name:  "address",
-				Usage: "host and ip address for connection syslog",
-				Value: "",
+				Name:  "bind-address",
+				Usage: "IP и порт слушаетля syslog, например: 0.0.0.0:514",
 			},
 			&cli.StringFlag{
 				Name:  "log",
-				Usage: "file for log output",
+				Usage: "Файл, куда будут складываться логи",
 				Value: constants.DEFAULT_LOG_FILE,
 			},
 			&cli.StringFlag{
 				Name:  "maxmind",
-				Usage: "MaxMind .mmdb database file",
+				Usage: "Файл базы данных MaxMind с расширением .mmdb",
 				Value: constants.DEFAULT_MAXMIND_DATABASE,
 			},
 			&cli.StringFlag{
 				Name:  "influx-host",
-				Usage: "InfluxDB connection string",
+				Usage: "URL подключения к Influx, например: http://0.0.0.0:8086",
 			},
 			&cli.StringFlag{
 				Name:  "influx-db",
-				Usage: "InfluxDB database name",
+				Usage: "Название базы данных в Influx",
 			},
 		},
 	}
@@ -50,7 +49,7 @@ func main() {
 
 		logger := lib.NewFileLogger(lib.LoggerConfig{
 			Logfile: c.String("log"),
-			IsDev:   c.Bool("dev"),
+			IsDev:   c.Bool("debug"),
 		})
 
 		lib.StartupMessage(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
@@ -64,8 +63,8 @@ func main() {
 			logger.ErrorLog(err)
 		}
 
-		if len(c.String("address")) == 0 {
-			logger.ErrorLog(errors.New("Address is not defined"))
+		if len(c.String("bind-address")) == 0 {
+			logger.ErrorLog(errors.New(constants.ADDRESS_IS_NOT_DEFINED))
 		}
 
 		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
@@ -91,7 +90,7 @@ func main() {
 		// RFC5424 - не подходит
 		server.SetFormat(syslog.RFC3164)
 		server.SetHandler(handler)
-		err = server.ListenUDP(c.String("address"))
+		err = server.ListenUDP(c.String("bind-address"))
 
 		if err != nil {
 			logger.ErrorLog(err)
