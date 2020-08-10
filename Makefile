@@ -13,7 +13,7 @@ deploy:
 	scp limehd-syslog-server root@${HOST}:/root/
 
 limehd-syslog-server:
-	go build 
+	go build -o ./bin
 
 shell:
 	ssh root@rz.iptv2022.com
