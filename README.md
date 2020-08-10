@@ -8,7 +8,7 @@
 
 #### Подробности для разработки
 
-- Собрать influx: `$ docker run -p 8086:8086 -d --name influx_docker --rm -v $PWD:/var/lib/influxdb -v $PWD:/var/lib/influxdb influxdb`
+- Собрать influx: `$ docker run -p 8086:8086 -d --name influx_docker --rm -v $PWD:/var/lib/influxdb influxdb`
 - Посмотреть результаты: 
     - `$ docker run --rm --link=influx_docker -it influxdb influx -host influx_docker`
     - `> create database polina`
