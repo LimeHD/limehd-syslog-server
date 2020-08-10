@@ -5,8 +5,8 @@ set :user, 'root'
 
 set :repo_url, 'git@github.com:LimeHD/limehd-syslog-server.git' if ENV['USE_LOCAL_REPO'].nil?
 
-set :linked_files, %w(.env)
-set :linked_dirs, %w(log output)
+# set :linked_files, %w(.env)
+set :linked_dirs, %w(log)
 
 if ENV['BRANCH'].nil?
   ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }

@@ -14,4 +14,3 @@ require 'capistrano/scm/git-with-submodules'
 install_plugin Capistrano::SCM::Git::WithSubmodules
 
 require 'capistrano/shell'
-require 'capistrano/composer'
