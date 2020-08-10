@@ -1,1 +1,1 @@
-make; cap production deploy
+make; bundle exec cap production deploy

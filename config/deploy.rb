@@ -1,11 +1,10 @@
 lock '3.12.1'
 
 set :application, 'limehd-syslog-server'
-set :user, 'root'
+set :user, 'master'
 
 set :repo_url, 'git@github.com:LimeHD/limehd-syslog-server.git' if ENV['USE_LOCAL_REPO'].nil?
 
-# set :linked_files, %w(.env)
 set :linked_dirs, %w(log)
 
 if ENV['BRANCH'].nil?
