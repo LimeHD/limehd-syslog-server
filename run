@@ -1,0 +1,1 @@
+sudo ./bin/limehd-syslog-server --debug --influx-host http://influx.iptv2022.com:8086 --influx-db influx --bind-address 0.0.0.0:514
