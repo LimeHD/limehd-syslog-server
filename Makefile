@@ -7,7 +7,7 @@ all: clean build
 build: limehd-syslog-server
 
 clean:
-	rm -f limehd-syslog-server
+	rm -f bin/limehd-syslog-server
 
 deploy:
 	scp limehd-syslog-server root@${HOST}:/root/
