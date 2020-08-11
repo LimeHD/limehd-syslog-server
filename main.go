@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/LimeHD/limehd-syslog-server/constants"
 	"github.com/LimeHD/limehd-syslog-server/lib"
@@ -20,8 +19,9 @@ func main() {
 				Usage: "Режим отладки - детализирует этапы работы сервиса, также в данном режиме все логи отправляются в stdout",
 			},
 			&cli.StringFlag{
-				Name:  "bind-address",
-				Usage: "IP и порт слушаетля syslog, например: 0.0.0.0:514",
+				Name:     "bind-address",
+				Usage:    "IP и порт слушаетля syslog, например: 0.0.0.0:514",
+				Required: true,
 			},
 			&cli.StringFlag{
 				Name:  "log",
@@ -34,12 +34,19 @@ func main() {
 				Value: constants.DEFAULT_MAXMIND_DATABASE,
 			},
 			&cli.StringFlag{
-				Name:  "influx-url",
-				Usage: "URL подключения к Influx, например: http://0.0.0.0:8086",
+				Name:     "influx-url",
+				Usage:    "URL подключения к Influx, например: http://0.0.0.0:8086",
+				Required: true,
 			},
 			&cli.StringFlag{
-				Name:  "influx-db",
-				Usage: "Название базы данных в Influx",
+				Name:     "influx-db",
+				Usage:    "Название базы данных в Influx",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "influx-measurement",
+				Usage:    "Название измерения (measurement) в Influx",
+				Required: true,
 			},
 		},
 	}
@@ -63,14 +70,11 @@ func main() {
 			logger.ErrorLog(err)
 		}
 
-		if len(c.String("bind-address")) == 0 {
-			logger.ErrorLog(errors.New(constants.ADDRESS_IS_NOT_DEFINED))
-		}
-
 		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
-			Addr:     c.String("influx-url"),
-			Database: c.String("influx-db"),
-			Logger:   logger,
+			Addr:        c.String("influx-url"),
+			Database:    c.String("influx-db"),
+			Logger:      logger,
+			Measurement: c.String("influx-measurement"),
 		})
 
 		if err != nil {
@@ -139,8 +143,7 @@ func main() {
 						Quality:      result.GetQuality(),
 					},
 					InfluxRequestFields: lib.InfluxRequestFields{
-						BytesSent:   result.GetBytesSent(),
-						Connections: result.GetConnections(),
+						BytesSent: result.GetBytesSent(),
 					},
 				})
 

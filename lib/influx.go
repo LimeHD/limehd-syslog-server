@@ -10,15 +10,17 @@ import (
 
 type (
 	InfluxClient struct {
-		c        client.Client
-		Database string
-		_logger  Logger
+		c           client.Client
+		Database    string
+		Measurement string
+		_logger     Logger
 	}
 
 	InfluxClientConfig struct {
-		Addr     string
-		Database string
-		Logger   Logger
+		Addr        string
+		Database    string
+		Logger      Logger
+		Measurement string
 	}
 
 	InfluxRequestTags struct {
@@ -47,6 +49,7 @@ func NewInfluxClient(config InfluxClientConfig) (*InfluxClient, error) {
 	})
 	i.Database = config.Database
 	i._logger = config.Logger
+	i.Measurement = config.Measurement
 
 	if err != nil {
 		return nil, err
@@ -78,7 +81,7 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 		return err
 	}
 
-	pt, err := i.CreatePoint("syslog",
+	pt, err := i.CreatePoint(i.Measurement,
 		tags{
 			"country_id":       strconv.FormatInt(int64(params.CountryId), 10),
 			"channel":          params.Channel,
@@ -86,8 +89,7 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 			"quality":          params.Quality,
 		},
 		fields{
-			"bytes_sent":  params.BytesSent,
-			"connections": params.Connections,
+			"bytes_sent": params.BytesSent,
 		},
 	)
 
