@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-const version = "0.2.0"
+const version = "0.3.0"
 
 func main() {
 	app := &cli.App{
@@ -34,7 +34,7 @@ func main() {
 				Value: constants.DEFAULT_MAXMIND_DATABASE,
 			},
 			&cli.StringFlag{
-				Name:  "influx-host",
+				Name:  "influx-url",
 				Usage: "URL подключения к Influx, например: http://0.0.0.0:8086",
 			},
 			&cli.StringFlag{
@@ -68,7 +68,7 @@ func main() {
 		}
 
 		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
-			Addr:     c.String("influx-host"),
+			Addr:     c.String("influx-url"),
 			Database: c.String("influx-db"),
 			Logger:   logger,
 		})

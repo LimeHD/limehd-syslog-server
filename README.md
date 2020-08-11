@@ -14,7 +14,7 @@
 
 `$ go run . --help`
 
-`$ go run . --debug --bind-address 0.0.0.0:514 --maxmind ./GeoLite2-City.mmdb --influx-host http://0.0.0.0:8086 --influx-db polina`
+`$ go run . --debug --bind-address 0.0.0.0:514 --maxmind ./GeoLite2-City.mmdb --influx-url http://0.0.0.0:8086 --influx-db polina`
 
 #### Подробности для разработки
 
