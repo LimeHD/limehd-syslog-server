@@ -27,3 +27,8 @@ const POS_HTTP_USER_AGENT = 17
 const POS_HTTP_XFORWARD = 16
 const POS_HTTP_VIA = 15
 const POS_HTTP_REFERER = 14
+
+// сообщения
+
+const ADDRESS_IS_NOT_DEFINED = "Кажется вы забыли указать адрес для подключения к syslog, пожалуйста, воспользуйтесь аргументом --help"
+const NOT_RECOGNIZE_LOGS = "Не удалось распознать строку лога"

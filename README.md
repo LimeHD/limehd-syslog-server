@@ -4,11 +4,11 @@
 
 `$ go run . --help`
 
-`$ go run . --dev --address 0.0.0.0:514 --maxmind ./GeoLite2-City.mmdb --influx-host http://0.0.0.0:8086 --influx-db polina`, аргументы:
+`$ go run . --debug --bind-address 0.0.0.0:514 --maxmind ./GeoLite2-City.mmdb --influx-host http://0.0.0.0:8086 --influx-db polina`
 
 #### Подробности для разработки
 
-- Собрать influx: `$ docker run -p 8086:8086 -d --name influx_docker --rm -v $PWD:/var/lib/influxdb -v $PWD:/var/lib/influxdb influxdb`
+- Собрать influx: `$ docker run -p 8086:8086 -d --name influx_docker --rm -v $PWD:/var/lib/influxdb influxdb`
 - Посмотреть результаты: 
     - `$ docker run --rm --link=influx_docker -it influxdb influx -host influx_docker`
     - `> create database polina`
