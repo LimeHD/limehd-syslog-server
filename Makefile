@@ -4,15 +4,15 @@ HOST=rz.iptv2022.com
 
 all: clean build
 
-build: limehd-syslog-server
+build: bin/limehd-syslog-server
 
 clean:
-	rm -f limehd-syslog-server
+	rm -f bin/limehd-syslog-server
 
 deploy:
 	scp limehd-syslog-server root@${HOST}:/root/
 
-limehd-syslog-server:
+bin/limehd-syslog-server:
 	go build -o ./bin
 
 shell:
