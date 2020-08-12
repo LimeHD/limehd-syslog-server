@@ -25,3 +25,10 @@ task :transfer_build do
     upload! './bin', release_path, recursive: true
   end
 end
+
+before 'systemd:daemon:setup', :mkdir_user_systemd
+task :mkdir_user_systemd do
+  on release_roles(:app) do
+    execute "mkdir -p /home/#{fetch(:user)}/.config/systemd/user"
+  end
+end

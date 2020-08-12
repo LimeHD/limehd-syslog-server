@@ -14,3 +14,5 @@ require 'capistrano/scm/git-with-submodules'
 install_plugin Capistrano::SCM::Git::WithSubmodules
 
 require 'capistrano/shell'
+require 'capistrano/systemd/multiservice'
+install_plugin Capistrano::Systemd::MultiService.new_service('daemon', service_type: 'user')
