@@ -13,6 +13,7 @@ const LEN_STREAM_PARTS = 6
 
 const DEFAULT_LOG_FILE = "./tmp/log"
 const DEFAULT_MAXMIND_DATABASE = "/usr/share/GeoIP/GeoLite2-City.mmdb"
+const DEFAULT_MAXMIND_ASN_DATABASE = "/usr/share/GeoIP/GeoLite2-ASN.mmdb"
 
 // константы частей лога, всего из 22 в качестве значений указываются ИНДЕКСЫ 0..21
 const FULL_LEN_OF_PARTS = 22
