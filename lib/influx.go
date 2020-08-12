@@ -4,6 +4,7 @@ import (
 	"fmt"
 	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
+	"strconv"
 	"time"
 )
 
@@ -24,6 +25,8 @@ type (
 
 	InfluxRequestTags struct {
 		CountryName  string
+		AsnNumber    uint
+		AsnOrg       string
 		Channel      string
 		StreamServer string
 		Quality      string
@@ -83,6 +86,8 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 	pt, err := i.CreatePoint(i.Measurement,
 		tags{
 			"country_name":     params.CountryName,
+			"asn_number":       strconv.FormatUint(uint64(params.AsnNumber), 10),
+			"asn_org":          params.AsnOrg,
 			"channel":          params.Channel,
 			"streaming_server": params.StreamServer,
 			"quality":          params.Quality,
