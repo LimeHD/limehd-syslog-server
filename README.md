@@ -10,7 +10,12 @@
 > make
 > cap production deploy
 
-### Запуск
+## Проверить статус запущенного сервера на боевом:
+
+> cap production shell
+> systemctl --user status limehd-syslog-server_daemon.service
+
+### Запуск локально
 
 `$ go run . --help`
 
