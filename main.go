@@ -53,6 +53,11 @@ func main() {
 				Usage:    "Название измерения (measurement) в Influx",
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:     "influx-measurement-online",
+				Usage:    "Название измерения (measurement) в Influx для счетчиков online пользователей",
+				Required: true,
+			},
 		},
 	}
 
@@ -77,10 +82,11 @@ func main() {
 		}
 
 		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
-			Addr:        c.String("influx-url"),
-			Database:    c.String("influx-db"),
-			Logger:      logger,
-			Measurement: c.String("influx-measurement"),
+			Addr:              c.String("influx-url"),
+			Database:          c.String("influx-db"),
+			Logger:            logger,
+			Measurement:       c.String("influx-measurement"),
+			MeasurementOnline: c.String("influx-measurement-online"),
 		})
 
 		if err != nil {
@@ -116,6 +122,12 @@ func main() {
 			PartsDelim:  constants.LOG_DELIM,
 			StreamDelim: constants.REQUEST_URI_DELIM,
 		})
+
+		online := lib.NewOnline(lib.OnlineConfig{
+			OnlineDuration: 30,
+		})
+
+		// go online.Scheduler()
 
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
@@ -162,6 +174,36 @@ func main() {
 					}
 
 					logger.ErrorLog(err)
+				}
+
+				// Пользователи онлайн
+
+				unique := lib.UniqueIdentity{
+					Channel:   result.GetChannel(),
+					Ip:        result.GetRemoteAddr(),
+					UserAgent: result.GetUserAgent(),
+				}
+
+				if !online.Contains(unique) {
+					online.Add(unique)
+				}
+
+				if online.IsExpiredFlush() {
+					err = influx.PointOnline(lib.InfluxOnlineRequestParams{
+						InfluxOnlineRequestFields: lib.InfluxOnlineRequestFields{
+							Channels: online.Connections(),
+						},
+					})
+
+					if err != nil {
+						if !logger.IsDevelopment() {
+							logger.WarningLog(err)
+						}
+
+						logger.ErrorLog(err)
+					}
+
+					online.Flush()
 				}
 			}
 		}(channel)

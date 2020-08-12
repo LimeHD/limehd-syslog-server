@@ -223,6 +223,10 @@ func (l Log) GetRemoteAddr() string {
 	return l.remoteAddr
 }
 
+func (l Log) GetUserAgent() string {
+	return l.httpUserAgent
+}
+
 // _logSlice methods
 
 func (sl _logSlice) getContent() string {
