@@ -35,3 +35,4 @@ const POS_HTTP_REFERER = 14
 const ADDRESS_IS_NOT_DEFINED = "Кажется вы забыли указать адрес для подключения к syslog, пожалуйста, воспользуйтесь аргументом --help"
 const NOT_RECOGNIZE_LOGS = "Не удалось распознать строку лога"
 const INVALID_PARTS_LENGHT = "Не валидная длина логов Nginx, пожалуйста, ознакомтесь с форматом логов"
+const LOG_FILE_ON_EXIST = "Файл для логов не обнаружен, будет создан новый"
