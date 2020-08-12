@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const version = "0.3.0"
+const version = "0.3.3"
 
 func main() {
 	app := &cli.App{
@@ -137,7 +137,7 @@ func main() {
 
 				err = influx.Point(lib.InfluxRequestParams{
 					InfluxRequestTags: lib.InfluxRequestTags{
-						CountryId:    finderResult.GetCountryGeoId(),
+						CountryName:  finderResult.GetCountryIsoCode(),
 						Channel:      result.GetChannel(),
 						StreamServer: result.GetStreamingServer(),
 						Quality:      result.GetQuality(),
