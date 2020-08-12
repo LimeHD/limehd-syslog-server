@@ -13,6 +13,7 @@ const LEN_STREAM_PARTS = 6
 
 const DEFAULT_LOG_FILE = "./tmp/log"
 const DEFAULT_MAXMIND_DATABASE = "/usr/share/GeoIP/GeoLite2-City.mmdb"
+const DEFAULT_MAXMIND_ASN_DATABASE = "/usr/share/GeoIP/GeoLite2-ASN.mmdb"
 
 // константы частей лога, всего из 22 в качестве значений указываются ИНДЕКСЫ 0..21
 const FULL_LEN_OF_PARTS = 22
@@ -34,3 +35,4 @@ const POS_HTTP_REFERER = 14
 const ADDRESS_IS_NOT_DEFINED = "Кажется вы забыли указать адрес для подключения к syslog, пожалуйста, воспользуйтесь аргументом --help"
 const NOT_RECOGNIZE_LOGS = "Не удалось распознать строку лога"
 const INVALID_PARTS_LENGHT = "Не валидная длина логов Nginx, пожалуйста, ознакомтесь с форматом логов"
+const LOG_FILE_ON_EXIST = "Файл для логов не обнаружен, будет создан новый"

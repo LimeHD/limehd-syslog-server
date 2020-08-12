@@ -9,13 +9,15 @@ import (
 
 type (
 	GeoFinder struct {
-		reader  *geoip2.Reader
-		_logger Logger
+		reader    *geoip2.Reader
+		asnReader *geoip2.Reader
+		_logger   Logger
 	}
 
 	GeoFinderConfig struct {
-		MmdbPath string
-		Logger   Logger
+		MmdbPath    string
+		AsnMmdbPath string
+		Logger      Logger
 	}
 
 	_geoIdentity struct {
@@ -28,10 +30,15 @@ type (
 		_geoIdentity
 		isoCode string
 	}
+	_asn struct {
+		org    string
+		number uint
+	}
 
 	GeoFinderResult struct {
 		city    _city
 		country _country
+		asn     _asn
 	}
 )
 
@@ -41,6 +48,12 @@ func NewGeoFinder(config GeoFinderConfig) (GeoFinder, error) {
 	g := GeoFinder{}
 	g.reader, err = g._openDabase(config.MmdbPath)
 	g._logger = config.Logger
+
+	if err != nil {
+		return GeoFinder{}, err
+	}
+
+	g.asnReader, err = g._openDabase(config.AsnMmdbPath)
 
 	if err != nil {
 		return GeoFinder{}, err
@@ -61,6 +74,12 @@ func (g GeoFinder) Find(ip string) (*GeoFinderResult, error) {
 		return nil, err
 	}
 
+	asnRecord, err := g.asnReader.ASN(_ip)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &GeoFinderResult{
 		city: _city{
 			isoName:   record.City.Names["en"],
@@ -72,6 +91,10 @@ func (g GeoFinder) Find(ip string) (*GeoFinderResult, error) {
 				geoNameId: record.Country.GeoNameID,
 			},
 			isoCode: record.Country.IsoCode,
+		},
+		asn: _asn{
+			org:    asnRecord.AutonomousSystemOrganization,
+			number: asnRecord.AutonomousSystemNumber,
 		},
 	}, nil
 }
@@ -106,6 +129,18 @@ func (r GeoFinderResult) GetCityName() string {
 	return r.city.isoName
 }
 
+func (r GeoFinderResult) GetOrganization() string {
+	if len(r.asn.org) == 0 {
+		return constants.UNKNOWN
+	}
+
+	return r.asn.org
+}
+
+func (r GeoFinderResult) GetOrganizationNumber() uint {
+	return r.asn.number
+}
+
 //
 
 func (g GeoFinder) _openDabase(mmdbPath string) (*geoip2.Reader, error) {
@@ -114,6 +149,7 @@ func (g GeoFinder) _openDabase(mmdbPath string) (*geoip2.Reader, error) {
 
 func (g GeoFinder) Close() {
 	_ = g.reader.Close()
+	_ = g.asnReader.Close()
 }
 
 func (g GeoFinder) CloseMessage() string {

@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const version = "0.3.3"
+const version = "0.3.4"
 
 func main() {
 	app := &cli.App{
@@ -24,14 +24,19 @@ func main() {
 				Required: true,
 			},
 			&cli.StringFlag{
-				Name:  "log",
-				Usage: "Файл, куда будут складываться логи",
-				Value: constants.DEFAULT_LOG_FILE,
+				Name:     "log",
+				Usage:    "Файл, куда будут складываться логи",
+				Required: false,
 			},
 			&cli.StringFlag{
 				Name:  "maxmind",
 				Usage: "Файл базы данных MaxMind с расширением .mmdb",
 				Value: constants.DEFAULT_MAXMIND_DATABASE,
+			},
+			&cli.StringFlag{
+				Name:  "maxmind-asn",
+				Usage: "Файл базы данных MaxMind ASN с расширением .mmdb для автономных систем",
+				Value: constants.DEFAULT_MAXMIND_ASN_DATABASE,
 			},
 			&cli.StringFlag{
 				Name:     "influx-url",
@@ -62,8 +67,9 @@ func main() {
 		lib.StartupMessage(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
 
 		geoFinder, err := lib.NewGeoFinder(lib.GeoFinderConfig{
-			MmdbPath: c.String("maxmind"),
-			Logger:   logger,
+			MmdbPath:    c.String("maxmind"),
+			AsnMmdbPath: c.String("maxmind-asn"),
+			Logger:      logger,
 		})
 
 		if err != nil {
@@ -138,6 +144,8 @@ func main() {
 				err = influx.Point(lib.InfluxRequestParams{
 					InfluxRequestTags: lib.InfluxRequestTags{
 						CountryName:  finderResult.GetCountryIsoCode(),
+						AsnNumber:    finderResult.GetOrganizationNumber(),
+						AsnOrg:       finderResult.GetOrganization(),
 						Channel:      result.GetChannel(),
 						StreamServer: result.GetStreamingServer(),
 						Quality:      result.GetQuality(),
