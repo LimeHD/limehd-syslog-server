@@ -58,6 +58,12 @@ func main() {
 				Usage:    "Название измерения (measurement) в Influx для счетчиков online пользователей",
 				Required: true,
 			},
+			&cli.Int64Flag{
+				Name:     "online-duration",
+				Usage:    "За какой промежуток агрегировать уникальных пользователей (в секундах)",
+				Value:    300,
+				Required: true,
+			},
 		},
 	}
 
@@ -124,7 +130,7 @@ func main() {
 		})
 
 		online := lib.NewOnline(lib.OnlineConfig{
-			OnlineDuration: 10,
+			OnlineDuration: c.Int64("online-duration"),
 		})
 
 		go online.Scheduler(func() {
