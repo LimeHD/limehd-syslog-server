@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"github.com/LimeHD/limehd-syslog-server/constants"
 	"github.com/oschwald/geoip2-golang"
 	"net"
 )
@@ -82,10 +83,18 @@ func (r GeoFinderResult) GetCountryGeoId() uint {
 }
 
 func (r GeoFinderResult) GetCountryName() string {
+	if len(r.country.isoName) == 0 {
+		return constants.UNKNOWN
+	}
+
 	return r.country.isoName
 }
 
 func (r GeoFinderResult) GetCountryIsoCode() string {
+	if len(r.country.isoCode) == 0 {
+		return constants.UNKNOWN
+	}
+
 	return r.country.isoCode
 }
 

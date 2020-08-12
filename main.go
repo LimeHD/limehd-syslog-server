@@ -137,7 +137,7 @@ func main() {
 
 				err = influx.Point(lib.InfluxRequestParams{
 					InfluxRequestTags: lib.InfluxRequestTags{
-						CountryId:    finderResult.GetCountryGeoId(),
+						CountryName:  finderResult.GetCountryIsoCode(),
 						Channel:      result.GetChannel(),
 						StreamServer: result.GetStreamingServer(),
 						Quality:      result.GetQuality(),
