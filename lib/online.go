@@ -24,12 +24,16 @@ type (
 		connections map[string]bool
 	}
 
+	UniqueCombination struct {
+		Ip        string
+		UserAgent string
+	}
+
 	// уникальные пользователи на конкретный канал
 	// определяются из хеша комбинаций ip и user-agent
 	UniqueIdentity struct {
-		Channel   string
-		Ip        string
-		UserAgent string
+		Channel string
+		UniqueCombination
 	}
 )
 
@@ -70,13 +74,17 @@ func (o Online) Connections() map[string]ChannelConnections {
 }
 
 func (o Online) Count() int {
+	o.mt.RLock()
+	defer o.mt.RUnlock()
 	return len(o.Connections())
 }
 
+// существует ли данный пользователь для данного канала
 func (o Online) Contains(i UniqueIdentity) bool {
 	exist := false
 
 	o.mt.RLock()
+	// если канал не существует, то и пользователя не существует
 	if c, channelExist := o.connections[i.Channel]; channelExist {
 		_, exist = c.connections[o.hash(i.Ip, i.UserAgent)]
 	}
@@ -85,6 +93,25 @@ func (o Online) Contains(i UniqueIdentity) bool {
 	return exist
 }
 
+// внутренний планировщик для отправки данны в influx
+// можно было бы и циклом
+func (o *Online) Scheduler(scheduleHandleFunction func()) {
+schedule:
+	time.Sleep(time.Second * time.Duration(o.duration))
+
+	scheduleHandleFunction()
+
+	goto schedule
+}
+
+// смотрит пользователя, если нет - добавляет нового уникального
+func (o Online) Peek(i UniqueIdentity) {
+	if !o.Contains(i) {
+		o.Add(i)
+	}
+}
+
+// deprecated в пользу планировщика
 // настало ли время сбросить данные
 // todo можно сделать как scheduler в отдельной гоурутине
 // todo с интевалом равным аргументу -online-duration
@@ -105,8 +132,7 @@ func (o Online) hash(ip, userAgent string) string {
 	return hex.EncodeToString(hasher[:])
 }
 
-//
-
+// количество активных соединений
 func (c ChannelConnections) Count() int {
 	return len(c.connections)
 }

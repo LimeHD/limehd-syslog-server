@@ -124,10 +124,31 @@ func main() {
 		})
 
 		online := lib.NewOnline(lib.OnlineConfig{
-			OnlineDuration: 30,
+			OnlineDuration: 10,
 		})
 
-		// go online.Scheduler()
+		go online.Scheduler(func() {
+			channelConnections := online.Connections()
+			err := influx.PointOnline(lib.InfluxOnlineRequestParams{
+				InfluxOnlineRequestFields: lib.InfluxOnlineRequestFields{
+					Channels: channelConnections,
+				},
+			})
+
+			if err != nil {
+				if !logger.IsDevelopment() {
+					logger.WarningLog(err)
+				}
+
+				logger.ErrorLog(err)
+			}
+
+			if logger.IsDevelopment() {
+				logger.InfoLog(fmt.Sprintf("Flushed connections: %d", channelConnections))
+			}
+
+			online.Flush()
+		})
 
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
@@ -179,31 +200,18 @@ func main() {
 				// Пользователи онлайн
 
 				unique := lib.UniqueIdentity{
-					Channel:   result.GetChannel(),
-					Ip:        result.GetRemoteAddr(),
-					UserAgent: result.GetUserAgent(),
+					Channel: result.GetChannel(),
+					UniqueCombination: lib.UniqueCombination{
+						Ip:        result.GetRemoteAddr(),
+						UserAgent: result.GetUserAgent(),
+					},
 				}
 
-				if !online.Contains(unique) {
-					online.Add(unique)
-				}
+				online.Peek(unique)
 
-				if online.IsExpiredFlush() {
-					err = influx.PointOnline(lib.InfluxOnlineRequestParams{
-						InfluxOnlineRequestFields: lib.InfluxOnlineRequestFields{
-							Channels: online.Connections(),
-						},
-					})
-
-					if err != nil {
-						if !logger.IsDevelopment() {
-							logger.WarningLog(err)
-						}
-
-						logger.ErrorLog(err)
-					}
-
-					online.Flush()
+				// todo удалить
+				if logger.IsDevelopment() {
+					logger.InfoLog(online.Connections())
 				}
 			}
 		}(channel)
