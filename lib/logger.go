@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"github.com/LimeHD/limehd-syslog-server/constants"
 	"log"
 	"os"
 )
@@ -25,18 +26,26 @@ type FileLogger struct {
 }
 
 func NewFileLogger(config LoggerConfig) Logger {
-	file, err := _createFileLogger(config.Logfile)
+	handler := os.Stdout
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	if len(config.Logfile) > 0 {
+		if !fileExists(config.Logfile) {
+			log.Println(constants.LOG_FILE_ON_EXIST)
+		}
 
-	if !config.IsDev {
-		log.SetOutput(file)
+		handler, err := _createFileLogger(config.Logfile)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if !config.IsDev {
+			log.SetOutput(handler)
+		}
 	}
 
 	return FileLogger{
-		handler: file,
+		handler: handler,
 		isDev:   config.IsDev,
 	}
 }
@@ -76,4 +85,12 @@ func StartupMessage(message string, logger Logger) {
 	if !logger.IsDevelopment() {
 		fmt.Println(message)
 	}
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

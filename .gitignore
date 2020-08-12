@@ -1,6 +1,7 @@
 limehd-syslog-server
 .idea
-tmp/log
+tmp/*
+!tmp/.gitkeep
 *.log
 *.mmdb
 bin/*

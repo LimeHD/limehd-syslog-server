@@ -103,13 +103,13 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	s._dirty = s.toSlice(parts)
 
 	if s._dirty.size() == 0 {
-		return Log{}, errors.New(constants.NOT_RECOGNIZE_LOGS)
+		return Log{}, errors.New(withMessage(constants.NOT_RECOGNIZE_LOGS, s._dirty.content))
 	}
 
 	_logFormatParts := strings.Split(s._dirty.content, s.config.PartsDelim)
 
 	if len(_logFormatParts) < constants.FULL_LEN_OF_PARTS {
-		return Log{}, errors.New(constants.INVALID_PARTS_LENGHT)
+		return Log{}, errors.New(withMessage(constants.INVALID_PARTS_LENGHT, s._dirty.content))
 	}
 
 	if s.logger.IsDevelopment() {
@@ -273,4 +273,8 @@ func _getOrUnknown(value string) string {
 	}
 
 	return value
+}
+
+func withMessage(message, body string) string {
+	return fmt.Sprintf("%s\nСодержимое:\n%s", message, body)
 }

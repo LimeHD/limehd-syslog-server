@@ -24,9 +24,9 @@ func main() {
 				Required: true,
 			},
 			&cli.StringFlag{
-				Name:  "log",
-				Usage: "Файл, куда будут складываться логи",
-				Value: constants.DEFAULT_LOG_FILE,
+				Name:     "log",
+				Usage:    "Файл, куда будут складываться логи",
+				Required: false,
 			},
 			&cli.StringFlag{
 				Name:  "maxmind",
