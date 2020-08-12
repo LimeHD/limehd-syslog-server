@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/groovenauts/capistrano-systemd-multiservice.git
+  revision: 39e31427b5dc6c595cf37ed51ae3b3a347f525f6
+  specs:
+    capistrano-systemd-multiservice (0.1.0.beta10)
+      capistrano (>= 3.7.0, < 3.15.0)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -8,8 +15,6 @@ GEM
       i18n
       rake (>= 10.0.0)
       sshkit (>= 1.9.0)
-    capistrano-composer (0.0.6)
-      capistrano (>= 3.0.0.pre)
     capistrano-git-with-submodules (2.0.4)
       capistrano (~> 3.7)
     capistrano-shell (0.2.0)
@@ -30,9 +35,9 @@ PLATFORMS
 
 DEPENDENCIES
   capistrano
-  capistrano-composer
   capistrano-git-with-submodules
   capistrano-shell
+  capistrano-systemd-multiservice!
 
 BUNDLED WITH
    2.1.4

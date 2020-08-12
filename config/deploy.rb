@@ -15,6 +15,8 @@ end
 
 set :deploy_to, -> { "/home/#{fetch(:user)}/#{fetch(:application)}" }
 
+after 'deploy:publishing', 'systemd:daemon:restart'
+
 namespace :deploy do
   after 'updated', :transfer_build
 end
@@ -23,5 +25,12 @@ desc 'Transfer build'
 task :transfer_build do
   on release_roles(:app) do
     upload! './bin', release_path, recursive: true
+  end
+end
+
+before 'systemd:daemon:setup', :mkdir_user_systemd
+task :mkdir_user_systemd do
+  on release_roles(:app) do
+    execute "mkdir -p /home/#{fetch(:user)}/.config/systemd/user"
   end
 end
