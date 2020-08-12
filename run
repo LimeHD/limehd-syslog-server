@@ -1,1 +1,1 @@
-sudo ./bin/limehd-syslog-server --influx-host http://influx.iptv2022.com:8086 --influx-db influx --bind-address 0.0.0.0:514
+sudo ./bin/limehd-syslog-server --influx-url http://influx.iptv2022.com:8086 --influx-db influx --bind-address 0.0.0.0:514 --influx-measurement mediastreaming
