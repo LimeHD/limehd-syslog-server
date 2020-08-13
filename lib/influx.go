@@ -31,6 +31,7 @@ type (
 		AsnOrg       string
 		Channel      string
 		StreamServer string
+		Host         string
 		Quality      string
 	}
 
@@ -97,6 +98,7 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 			"asn_org":          params.AsnOrg,
 			"channel":          params.Channel,
 			"streaming_server": params.StreamServer,
+			"host":             params.Host,
 			"quality":          params.Quality,
 		},
 		fields{

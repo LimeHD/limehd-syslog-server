@@ -184,7 +184,8 @@ func main() {
 						AsnNumber:    finderResult.GetOrganizationNumber(),
 						AsnOrg:       finderResult.GetOrganization(),
 						Channel:      result.GetChannel(),
-						StreamServer: result.GetStreamingServer(),
+						StreamServer: result.GetClientAddr(),
+						Host:         result.GetStreamingServer(),
 						Quality:      result.GetQuality(),
 					},
 					InfluxRequestFields: lib.InfluxRequestFields{
