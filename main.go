@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const version = "0.3.9" // Automaticaly updated // Automaticaly updated
+const version = "0.3.10" // Automaticaly updated // Automaticaly updated // Automaticaly updated
 
 func main() {
 	app := &cli.App{
