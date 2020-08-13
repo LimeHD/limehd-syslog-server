@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const version = "0.3.6"
+const version = "0.3.7"
 
 func main() {
 	app := &cli.App{
