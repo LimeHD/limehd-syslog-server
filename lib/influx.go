@@ -44,12 +44,8 @@ type (
 		InfluxRequestFields
 	}
 
-	InfluxOnlineRequestFields struct {
-		Channels map[string]ChannelConnections
-	}
-
 	InfluxOnlineRequestParams struct {
-		InfluxOnlineRequestFields
+		Channels map[string]ChannelConnections
 	}
 )
 

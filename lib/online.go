@@ -55,7 +55,7 @@ func (o *Online) Add(i UniqueIdentity) {
 			connections: map[string]bool{},
 		}
 	}
-	o.connections[i.Channel].connections[o.hash(i.Ip, i.UserAgent)] = true
+	o.connections[i.Channel].connections[i.hash()] = true
 	o.mt.Unlock()
 }
 
@@ -86,7 +86,7 @@ func (o Online) Contains(i UniqueIdentity) bool {
 	o.mt.RLock()
 	// если канал не существует, то и пользователя не существует
 	if c, channelExist := o.connections[i.Channel]; channelExist {
-		_, exist = c.connections[o.hash(i.Ip, i.UserAgent)]
+		_, exist = c.connections[i.hash()]
 	}
 	o.mt.RUnlock()
 
@@ -126,8 +126,9 @@ func (o *Online) setFlushedAt() {
 }
 
 // определяет хеш для определения уникальности поступившего запроса
-func (o Online) hash(ip, userAgent string) string {
-	ipAgent := ip + userAgent
+func (u UniqueIdentity) hash() string {
+	ipAgent := u.Ip + u.UserAgent
+
 	hasher := md5.Sum([]byte(ipAgent))
 	return hex.EncodeToString(hasher[:])
 }

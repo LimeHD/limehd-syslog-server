@@ -136,9 +136,7 @@ func main() {
 		go online.Scheduler(func() {
 			channelConnections := online.Connections()
 			err := influx.PointOnline(lib.InfluxOnlineRequestParams{
-				InfluxOnlineRequestFields: lib.InfluxOnlineRequestFields{
-					Channels: channelConnections,
-				},
+				Channels: channelConnections,
 			})
 
 			if err != nil {
