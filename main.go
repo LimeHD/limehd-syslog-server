@@ -6,6 +6,7 @@ import (
 	"github.com/LimeHD/limehd-syslog-server/lib"
 	"github.com/urfave/cli"
 	"gopkg.in/mcuadros/go-syslog.v2"
+	"gopkg.in/mcuadros/go-syslog.v2/format"
 	"os"
 )
 
@@ -154,70 +155,86 @@ func main() {
 			online.Flush()
 		})
 
+		// возможно их надо как-то вынести
+		sendInfluxListener := func(q lib.Queue) {
+			err = influx.Point(lib.InfluxRequestParams{
+				InfluxRequestTags: lib.InfluxRequestTags{
+					CountryName:  q.FinderResult.GetCountryIsoCode(),
+					AsnNumber:    q.FinderResult.GetOrganizationNumber(),
+					AsnOrg:       q.FinderResult.GetOrganization(),
+					Channel:      q.ParserResult.GetChannel(),
+					StreamServer: q.ParserResult.GetStreamingServer(),
+					Quality:      q.ParserResult.GetQuality(),
+				},
+				InfluxRequestFields: lib.InfluxRequestFields{
+					BytesSent: q.ParserResult.GetBytesSent(),
+				},
+			})
+
+			if err != nil {
+				if !logger.IsDevelopment() {
+					logger.WarningLog(err)
+				} else {
+					logger.ErrorLog(err)
+				}
+			}
+
+			// Пользователи онлайн
+
+			unique := lib.UniqueIdentity{
+				Channel: q.ParserResult.GetChannel(),
+				UniqueCombination: lib.UniqueCombination{
+					Ip:        q.ParserResult.GetRemoteAddr(),
+					UserAgent: q.ParserResult.GetUserAgent(),
+				},
+			}
+
+			online.Peek(unique)
+
+			if logger.IsDevelopment() {
+				logger.InfoLog(online.Connections())
+			}
+		}
+		// это тоже вынести
+		parseLogsWorker := func(parts format.LogParts) lib.Queue {
+			result, err := parser.Parse(parts)
+
+			if err != nil {
+				if !logger.IsDevelopment() {
+					logger.WarningLog(err)
+				} else {
+					logger.ErrorLog(err)
+				}
+			}
+
+			finderResult, err := geoFinder.Find(result.GetRemoteAddr())
+
+			if err != nil {
+				if !logger.IsDevelopment() {
+					logger.WarningLog(err)
+				} else {
+					logger.ErrorLog(err)
+				}
+			}
+
+			return lib.Queue{
+				ParserResult: result,
+				FinderResult: finderResult,
+			}
+		}
+
+		pool := lib.NewWorkerPool(lib.WorkerConfig{
+			ListenerHandler: sendInfluxListener,
+			QueueHandler:    parseLogsWorker,
+		})
+
+		// слушаем данные с воркеров
+		go pool.Listen()
+		// принимаем сообщения с канала syslog
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
-				result, err := parser.Parse(logParts)
-
-				if err != nil {
-					if !logger.IsDevelopment() {
-						logger.WarningLog(err)
-						continue
-					}
-
-					logger.ErrorLog(err)
-				}
-
-				finderResult, err := geoFinder.Find(result.GetRemoteAddr())
-
-				if err != nil {
-					if !logger.IsDevelopment() {
-						logger.WarningLog(err)
-						continue
-					}
-
-					logger.ErrorLog(err)
-				}
-
-				err = influx.Point(lib.InfluxRequestParams{
-					InfluxRequestTags: lib.InfluxRequestTags{
-						CountryName:  finderResult.GetCountryIsoCode(),
-						AsnNumber:    finderResult.GetOrganizationNumber(),
-						AsnOrg:       finderResult.GetOrganization(),
-						Channel:      result.GetChannel(),
-						StreamServer: result.GetClientAddr(),
-						Host:         result.GetStreamingServer(),
-						Quality:      result.GetQuality(),
-					},
-					InfluxRequestFields: lib.InfluxRequestFields{
-						BytesSent: result.GetBytesSent(),
-					},
-				})
-
-				if err != nil {
-					if !logger.IsDevelopment() {
-						logger.WarningLog(err)
-						continue
-					}
-
-					logger.ErrorLog(err)
-				}
-
-				// Пользователи онлайн
-
-				unique := lib.UniqueIdentity{
-					Channel: result.GetChannel(),
-					UniqueCombination: lib.UniqueCombination{
-						Ip:        result.GetRemoteAddr(),
-						UserAgent: result.GetUserAgent(),
-					},
-				}
-
-				online.Peek(unique)
-
-				// todo удалить
-				if logger.IsDevelopment() {
-					logger.InfoLog(online.Connections())
-				}
+				// создаем новый воркер и отправляем в очередь данные
+				go pool.Queue(logParts)
 			}
 		}(channel)
 
