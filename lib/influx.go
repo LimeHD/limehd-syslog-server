@@ -10,17 +10,19 @@ import (
 
 type (
 	InfluxClient struct {
-		c           client.Client
-		Database    string
-		Measurement string
-		_logger     Logger
+		c                 client.Client
+		Database          string
+		Measurement       string
+		MeasurementOnline string
+		_logger           Logger
 	}
 
 	InfluxClientConfig struct {
-		Addr        string
-		Database    string
-		Logger      Logger
-		Measurement string
+		Addr              string
+		Database          string
+		Logger            Logger
+		Measurement       string
+		MeasurementOnline string
 	}
 
 	InfluxRequestTags struct {
@@ -29,6 +31,7 @@ type (
 		AsnOrg       string
 		Channel      string
 		StreamServer string
+		Host         string
 		Quality      string
 	}
 
@@ -41,6 +44,10 @@ type (
 		InfluxRequestTags
 		InfluxRequestFields
 	}
+
+	InfluxOnlineRequestParams struct {
+		Channels map[string]ChannelConnections
+	}
 )
 
 func NewInfluxClient(config InfluxClientConfig) (*InfluxClient, error) {
@@ -52,6 +59,7 @@ func NewInfluxClient(config InfluxClientConfig) (*InfluxClient, error) {
 	i.Database = config.Database
 	i._logger = config.Logger
 	i.Measurement = config.Measurement
+	i.MeasurementOnline = config.MeasurementOnline
 
 	if err != nil {
 		return nil, err
@@ -90,6 +98,7 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 			"asn_org":          params.AsnOrg,
 			"channel":          params.Channel,
 			"streaming_server": params.StreamServer,
+			"host":             params.Host,
 			"quality":          params.Quality,
 		},
 		fields{
@@ -98,6 +107,40 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 	)
 
 	bp.AddPoint(pt)
+
+	if err := i.c.Write(bp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i InfluxClient) PointOnline(params InfluxOnlineRequestParams) error {
+	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
+		Database: i.Database,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// формируем данные пачками для отправки в influx
+	for name, channel := range params.Channels {
+		pt, err := i.CreatePoint(i.MeasurementOnline,
+			tags{
+				"channel": name,
+			},
+			fields{
+				"value": channel.Count(),
+			},
+		)
+
+		if err != nil {
+			return err
+		}
+
+		bp.AddPoint(pt)
+	}
 
 	if err := i.c.Write(bp); err != nil {
 		return err

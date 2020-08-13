@@ -53,6 +53,17 @@ func main() {
 				Usage:    "Название измерения (measurement) в Influx",
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:     "influx-measurement-online",
+				Usage:    "Название измерения (measurement) в Influx для счетчиков online пользователей",
+				Required: true,
+			},
+			&cli.Int64Flag{
+				Name:     "online-duration",
+				Usage:    "За какой промежуток агрегировать уникальных пользователей (в секундах)",
+				Value:    300,
+				Required: true,
+			},
 		},
 	}
 
@@ -77,10 +88,11 @@ func main() {
 		}
 
 		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
-			Addr:        c.String("influx-url"),
-			Database:    c.String("influx-db"),
-			Logger:      logger,
-			Measurement: c.String("influx-measurement"),
+			Addr:              c.String("influx-url"),
+			Database:          c.String("influx-db"),
+			Logger:            logger,
+			Measurement:       c.String("influx-measurement"),
+			MeasurementOnline: c.String("influx-measurement-online"),
 		})
 
 		if err != nil {
@@ -117,6 +129,31 @@ func main() {
 			StreamDelim: constants.REQUEST_URI_DELIM,
 		})
 
+		online := lib.NewOnline(lib.OnlineConfig{
+			OnlineDuration: c.Int64("online-duration"),
+		})
+
+		go online.Scheduler(func() {
+			channelConnections := online.Connections()
+			err := influx.PointOnline(lib.InfluxOnlineRequestParams{
+				Channels: channelConnections,
+			})
+
+			if err != nil {
+				if !logger.IsDevelopment() {
+					logger.WarningLog(err)
+				} else {
+					logger.ErrorLog(err)
+				}
+			}
+
+			if logger.IsDevelopment() {
+				logger.InfoLog(fmt.Sprintf("Flushed connections: %d", channelConnections))
+			}
+
+			online.Flush()
+		})
+
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
 				result, err := parser.Parse(logParts)
@@ -147,7 +184,8 @@ func main() {
 						AsnNumber:    finderResult.GetOrganizationNumber(),
 						AsnOrg:       finderResult.GetOrganization(),
 						Channel:      result.GetChannel(),
-						StreamServer: result.GetStreamingServer(),
+						StreamServer: result.GetClientAddr(),
+						Host:         result.GetStreamingServer(),
 						Quality:      result.GetQuality(),
 					},
 					InfluxRequestFields: lib.InfluxRequestFields{
@@ -162,6 +200,23 @@ func main() {
 					}
 
 					logger.ErrorLog(err)
+				}
+
+				// Пользователи онлайн
+
+				unique := lib.UniqueIdentity{
+					Channel: result.GetChannel(),
+					UniqueCombination: lib.UniqueCombination{
+						Ip:        result.GetRemoteAddr(),
+						UserAgent: result.GetUserAgent(),
+					},
+				}
+
+				online.Peek(unique)
+
+				// todo удалить
+				if logger.IsDevelopment() {
+					logger.InfoLog(online.Connections())
 				}
 			}
 		}(channel)

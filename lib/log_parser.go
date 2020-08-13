@@ -24,6 +24,7 @@ type (
 		_http
 		_connection
 		bytesSent int
+		_clientInfo
 	}
 
 	_time struct {
@@ -84,6 +85,12 @@ type (
 		quality string
 		index   string
 		prefix  string
+	}
+
+	_clientInfo struct {
+		client   string
+		tag      string
+		hostname string
 	}
 
 	ParserConfig struct {
@@ -168,6 +175,11 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 			connection:         _logFormatParts[constants.POS_CONNECTIONS],
 		},
 		bytesSent: _safeStringToInt(_logFormatParts[constants.POS_BYTES_SENT]),
+		_clientInfo: _clientInfo{
+			client:   s._dirty.client,
+			tag:      s._dirty.tag,
+			hostname: s._dirty.hostname,
+		},
 	}, nil
 }
 
@@ -221,6 +233,18 @@ func (l Log) GetChannel() string {
 
 func (l Log) GetRemoteAddr() string {
 	return l.remoteAddr
+}
+
+func (l Log) GetUserAgent() string {
+	return l.httpUserAgent
+}
+
+func (l Log) GetClientAddr() string {
+	if len(l.client) == 0 {
+		return constants.UNKNOWN
+	}
+
+	return l.client
 }
 
 // _logSlice methods
