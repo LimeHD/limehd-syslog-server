@@ -142,9 +142,9 @@ func main() {
 			if err != nil {
 				if !logger.IsDevelopment() {
 					logger.WarningLog(err)
+				} else {
+					logger.ErrorLog(err)
 				}
-
-				logger.ErrorLog(err)
 			}
 
 			if logger.IsDevelopment() {
