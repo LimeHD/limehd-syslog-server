@@ -15,6 +15,7 @@ end
 
 set :deploy_to, -> { "/home/#{fetch(:user)}/#{fetch(:application)}" }
 
+before 'deploy:publishing', 'systemd:daemon:setup'
 after 'deploy:publishing', 'systemd:daemon:restart'
 
 namespace :deploy do

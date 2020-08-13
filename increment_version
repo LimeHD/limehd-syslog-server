@@ -1,0 +1,1 @@
+perl -i -p -e 's{(const\s+version\s+=\s+)"(\d+).(\d+).(\d+)"}{"$1\"$2.$3.".($4+1)."\" \/\/ Automaticaly updated"}egis' ./main.go

@@ -1,0 +1,5 @@
+./increment_version
+git add main.go
+git commit -m 'Bump new version'
+git push
+./deploy
