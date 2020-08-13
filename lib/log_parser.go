@@ -133,20 +133,11 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 		requestMethod:  "",
 		args:           "",
 		requestTime:    "",
-		_splitUri:      s.defaultStreamUri(),
 	}
 
-	// example: /streaming/domashniy/324/vh1w/playlist.m3u8
-	__splitUri := _safeSplitUri(_logFormatParts[constants.POS_URI], s.config.StreamDelim)
-
-	if s.isStreamUri(__splitUri) {
-		_req._splitUri = _splitUri{
-			prefix:  __splitUri[1],
-			channel: __splitUri[2],
-			quality: __splitUri[4],
-			index:   __splitUri[5],
-		}
-	}
+	// @see readme
+	streamUri := _safeSplitUri(_logFormatParts[constants.POS_URI], s.config.StreamDelim)
+	_req._splitUri = s.streamParts(streamUri)
 
 	return Log{
 		_time: _time{
@@ -207,6 +198,35 @@ func (s SyslogParser) defaultStreamUri() _splitUri {
 		index:   constants.UNKNOWN,
 		prefix:  constants.UNKNOWN,
 	}
+}
+
+func (s SyslogParser) streamParts(stream []string) _splitUri {
+	if isInetraTranscoder(len(stream)) {
+		return _splitUri{
+			prefix:  stream[1],
+			channel: stream[2],
+			quality: stream[4],
+			index:   stream[5],
+		}
+	}
+
+	if isFlussonicTranscoder(len(stream)) {
+		// tracks-v1a1
+		quality := strings.Split(stream[2], "-")
+
+		if len(quality) == 0 {
+			quality = append(quality, constants.UNKNOWN)
+		}
+
+		return _splitUri{
+			prefix:  stream[1],
+			channel: stream[1],
+			quality: quality[0],
+			index:   stream[8],
+		}
+	}
+
+	return s.defaultStreamUri()
 }
 
 // export getters
