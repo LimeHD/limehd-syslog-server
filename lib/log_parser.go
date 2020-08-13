@@ -244,6 +244,14 @@ func (l Log) GetClientAddr() string {
 		return constants.UNKNOWN
 	}
 
+	if strings.Contains(l.client, ":") {
+		list := strings.Split(l.client, ":")
+
+		if len(list) > 0 {
+			return list[0]
+		}
+	}
+
 	return l.client
 }
 
