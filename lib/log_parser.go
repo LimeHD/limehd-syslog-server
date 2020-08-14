@@ -128,10 +128,12 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 		}
 	}
 
+	valueOf := s.template.CreateTemplateParser(_logFormatParts)
+
 	_req := _request{
-		host:           s.template.ValueOf("host", _logFormatParts),
-		remoteAddr:     s.template.ValueOf("remote_addr", _logFormatParts),
-		uri:            s.template.ValueOf("uri", _logFormatParts),
+		host:           valueOf("host"),
+		remoteAddr:     valueOf("remote_addr"),
+		uri:            valueOf("uri"),
 		serverProtocol: "",
 		requestMethod:  "",
 		args:           "",
@@ -139,7 +141,7 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	}
 
 	// @see readme
-	streamUri := _safeSplitUri(s.template.ValueOf("uri", _logFormatParts), s.config.StreamDelim)
+	streamUri := _safeSplitUri(valueOf("uri"), s.config.StreamDelim)
 	_req._splitUri = s.streamParts(streamUri)
 
 	return Log{
@@ -158,17 +160,17 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 			upstreamStatus:       "",
 		},
 		_http: _http{
-			httpReferer:       _getOrUnknown(s.template.ValueOf("http_referer", _logFormatParts)),
-			httpVia:           _getOrUnknown(s.template.ValueOf("http_via", _logFormatParts)),
-			httpXForwardedFor: _getOrUnknown(s.template.ValueOf("http_x_forwarded_for", _logFormatParts)),
-			httpUserAgent:     _getOrUnknown(s.template.ValueOf("http_user_agent", _logFormatParts)),
-			sentHttpXProfile:  _getOrUnknown(s.template.ValueOf("sent_http_x_profile", _logFormatParts)),
+			httpReferer:       _getOrUnknown(valueOf("http_referer")),
+			httpVia:           _getOrUnknown(valueOf("http_via")),
+			httpXForwardedFor: _getOrUnknown(valueOf("http_x_forwarded_for")),
+			httpUserAgent:     _getOrUnknown(valueOf("http_user_agent")),
+			sentHttpXProfile:  _getOrUnknown(valueOf("sent_http_x_profile")),
 		},
 		_connection: _connection{
-			connectionRequests: _safeStringToInt(s.template.ValueOf("connection_requests", _logFormatParts)),
-			connection:         s.template.ValueOf("connection", _logFormatParts),
+			connectionRequests: _safeStringToInt(valueOf("connection_requests")),
+			connection:         valueOf("connection"),
 		},
-		bytesSent: _safeStringToInt(s.template.ValueOf("bytes_sent", _logFormatParts)),
+		bytesSent: _safeStringToInt(valueOf("bytes_sent")),
 		_clientInfo: _clientInfo{
 			client:   s._dirty.client,
 			tag:      s._dirty.tag,

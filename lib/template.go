@@ -24,17 +24,33 @@ func NewTemplate(config TemplateConfig) (Template, error) {
 	return t, err
 }
 
-func (t Template) ValueOf(key string, from []string) string {
+// создает замыкание для последующего использования,как
+// valueOf := t.CreateTemplateParser([]string)
+// _ = valueOf("host")
+func (t Template) CreateTemplateParser(from []string) func(string) string {
+	s := from
+	return func(key string) string {
+		return t.valueOf(key, s)
+	}
+}
+
+// получаем позицию значения (индекс) по именованному ключу
+// далее пытаемся получить значение из слайса
+// т.к. слайс string и не может быть другим повзвращаем пустую строку в случае отсутсвия значения
+func (t Template) valueOf(key string, from []string) string {
 	pos := t.pos(key)
+	// индекс не найден
 	if pos == -1 {
 		return ""
 	}
+	// существует ли такой индекс в слайсе
 	if len(from) >= pos {
 		return from[pos]
 	}
 	return ""
 }
 
+// определяем индекс по названию ключа
 func (t Template) pos(key string) int {
 	if pos, ok := t.configurationMap[t.key(key)]; ok {
 		return pos
@@ -76,10 +92,13 @@ func (t Template) read(filename string) (string, error) {
 	return string(b), nil
 }
 
+// @see template.conf
 func (t Template) parse(raw string) map[string]int {
 	items := strings.Split(raw, constants.LOG_DELIM)
 	tmp := make(map[string]int, len(items))
 
+	// формируем мапу с ключами названиями переменных в качестве значений используем их очередность
+	// в дальнейшем они будут индексами
 	for pos, item := range items {
 		rpl := strings.Replace(item, "$", "", -1)
 		key := strings.TrimSpace(rpl)
