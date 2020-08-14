@@ -4,6 +4,7 @@ package constants
 const UNKNOWN = "unknown"
 const REQUEST_URI_DELIM = "/"
 const LOG_DELIM = "|"
+const NGINX_TEMPLATE_VAR = "$"
 
 // данное значение приходит в строке лога, если данные отсутствуют изначально
 const EMPTY_VALUE = "-"
@@ -36,3 +37,5 @@ const ADDRESS_IS_NOT_DEFINED = "Кажется вы забыли указать 
 const NOT_RECOGNIZE_LOGS = "Не удалось распознать строку лога"
 const INVALID_PARTS_LENGHT = "Не валидная длина логов Nginx, пожалуйста, ознакомтесь с форматом логов"
 const LOG_FILE_ON_EXIST = "Файл для логов не обнаружен, будет создан новый"
+const TEMPLATE_FILE_NOT_EXIST = "Файл конфигурации не найден"
+const TEMPLATE_FILE_NOT_LOADED = "Не удалось загрузить шаблон"

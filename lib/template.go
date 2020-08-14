@@ -60,7 +60,7 @@ func (t Template) pos(key string) int {
 
 func (t *Template) load(template string) error {
 	if !t.exist(template) {
-		return errors.New("Файл конфигурации не найден")
+		return errors.New(constants.TEMPLATE_FILE_NOT_EXIST)
 	}
 
 	if content, err := t.read(template); err == nil {
@@ -68,7 +68,7 @@ func (t *Template) load(template string) error {
 		return nil
 	}
 
-	return errors.New("Не удалось загрузить шаблон")
+	return errors.New(constants.TEMPLATE_FILE_NOT_LOADED)
 }
 
 func (t Template) key(key string) string {
@@ -100,7 +100,7 @@ func (t Template) parse(raw string) map[string]int {
 	// формируем мапу с ключами названиями переменных в качестве значений используем их очередность
 	// в дальнейшем они будут индексами
 	for pos, item := range items {
-		rpl := strings.Replace(item, "$", "", -1)
+		rpl := strings.Replace(item, constants.NGINX_TEMPLATE_VAR, "", -1)
 		key := strings.TrimSpace(rpl)
 		tmp[key] = pos
 	}

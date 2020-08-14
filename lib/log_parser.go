@@ -118,10 +118,6 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 
 	_logFormatParts := strings.Split(s._dirty.content, s.config.PartsDelim)
 
-	if len(_logFormatParts) < constants.FULL_LEN_OF_PARTS {
-		return Log{}, errors.New(withMessage(constants.INVALID_PARTS_LENGHT, s._dirty.content))
-	}
-
 	if s.logger.IsDevelopment() {
 		for k, v := range _logFormatParts {
 			s.logger.InfoLog(fmt.Sprintf("%d => %v", k, v))
