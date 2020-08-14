@@ -97,6 +97,7 @@
     - `/domashniy/tracks-v1a1/2020/08/13/11/38/56-06000.ts`
 - Inetra Transcoder: (6)
     - `/streaming/muztv/324/vl2w/segment-1597220444-01972046.ts`
+    - `/streaming/muztv/324/???/csegment.ts`
 Где:
 
 * `vh1w` - `quality`
