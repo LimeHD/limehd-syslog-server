@@ -14,32 +14,49 @@ type (
 	}
 
 	TemplateConfig struct {
-		config string
+		Template string
 	}
 )
 
-func (t *Template) Load(config TemplateConfig) error {
-	if !t.exist(config.config) {
+func NewTemplate(config TemplateConfig) (Template, error) {
+	t := Template{}
+	err := t.load(config.Template)
+	return t, err
+}
+
+func (t Template) ValueOf(key string, from []string) string {
+	pos := t.pos(key)
+	if pos == -1 {
+		return ""
+	}
+	if len(from) >= pos {
+		return from[pos]
+	}
+	return ""
+}
+
+func (t Template) pos(key string) int {
+	if pos, ok := t.configurationMap[t.key(key)]; ok {
+		return pos
+	}
+	return -1
+}
+
+func (t *Template) load(template string) error {
+	if !t.exist(template) {
 		return errors.New("Файл конфигурации не найден")
 	}
 
-	if content, err := t.read(config.config); err == nil {
+	if content, err := t.read(template); err == nil {
 		t.configurationMap = t.parse(content)
+		return nil
 	}
 
 	return errors.New("Не удалось загрузить шаблон")
 }
 
-func (t Template) Value(key string) int {
-	if pos, ok := t.configurationMap[t.key(key)]; ok {
-		return pos
-	}
-
-	return -1
-}
-
 func (t Template) key(key string) string {
-	return "$" + key
+	return key
 }
 
 func (t Template) exist(filename string) bool {
@@ -64,7 +81,9 @@ func (t Template) parse(raw string) map[string]int {
 	tmp := make(map[string]int, len(items))
 
 	for pos, item := range items {
-		tmp[item] = pos
+		rpl := strings.Replace(item, "$", "", -1)
+		key := strings.TrimSpace(rpl)
+		tmp[key] = pos
 	}
 
 	return tmp

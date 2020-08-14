@@ -11,9 +11,10 @@ import (
 
 type (
 	SyslogParser struct {
-		_dirty _logSlice
-		logger Logger
-		config ParserConfig
+		_dirty   _logSlice
+		logger   Logger
+		config   ParserConfig
+		template Template
 	}
 
 	Log struct {
@@ -96,13 +97,15 @@ type (
 	ParserConfig struct {
 		PartsDelim  string
 		StreamDelim string
+		Template    Template
 	}
 )
 
 func NewSyslogParser(logger Logger, config ParserConfig) SyslogParser {
 	return SyslogParser{
-		logger: logger,
-		config: config,
+		logger:   logger,
+		config:   config,
+		template: config.Template,
 	}
 }
 
@@ -126,9 +129,9 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	}
 
 	_req := _request{
-		host:           _logFormatParts[constants.POS_HOST],
-		remoteAddr:     _logFormatParts[constants.POS_REMOTE_ADDR],
-		uri:            _logFormatParts[constants.POS_URI],
+		host:           s.template.ValueOf("host", _logFormatParts),
+		remoteAddr:     s.template.ValueOf("remote_addr", _logFormatParts),
+		uri:            s.template.ValueOf("uri", _logFormatParts),
 		serverProtocol: "",
 		requestMethod:  "",
 		args:           "",
@@ -136,7 +139,7 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	}
 
 	// @see readme
-	streamUri := _safeSplitUri(_logFormatParts[constants.POS_URI], s.config.StreamDelim)
+	streamUri := _safeSplitUri(s.template.ValueOf("uri", _logFormatParts), s.config.StreamDelim)
 	_req._splitUri = s.streamParts(streamUri)
 
 	return Log{
@@ -155,17 +158,17 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 			upstreamStatus:       "",
 		},
 		_http: _http{
-			httpReferer:       _getOrUnknown(_logFormatParts[constants.POS_HTTP_REFERER]),
-			httpVia:           _getOrUnknown(_logFormatParts[constants.POS_HTTP_VIA]),
-			httpXForwardedFor: _getOrUnknown(_logFormatParts[constants.POS_HTTP_XFORWARD]),
-			httpUserAgent:     _getOrUnknown(_logFormatParts[constants.POS_HTTP_USER_AGENT]),
-			sentHttpXProfile:  _getOrUnknown(_logFormatParts[constants.POST_HTTP_SENT_X]),
+			httpReferer:       _getOrUnknown(s.template.ValueOf("http_referer", _logFormatParts)),
+			httpVia:           _getOrUnknown(s.template.ValueOf("http_via", _logFormatParts)),
+			httpXForwardedFor: _getOrUnknown(s.template.ValueOf("http_x_forwarded_for", _logFormatParts)),
+			httpUserAgent:     _getOrUnknown(s.template.ValueOf("http_user_agent", _logFormatParts)),
+			sentHttpXProfile:  _getOrUnknown(s.template.ValueOf("sent_http_x_profile", _logFormatParts)),
 		},
 		_connection: _connection{
-			connectionRequests: _safeStringToInt(_logFormatParts[constants.POS_CONNECTION_REQUESTS]),
-			connection:         _logFormatParts[constants.POS_CONNECTIONS],
+			connectionRequests: _safeStringToInt(s.template.ValueOf("connection_requests", _logFormatParts)),
+			connection:         s.template.ValueOf("connection", _logFormatParts),
 		},
-		bytesSent: _safeStringToInt(_logFormatParts[constants.POS_BYTES_SENT]),
+		bytesSent: _safeStringToInt(s.template.ValueOf("bytes_sent", _logFormatParts)),
 		_clientInfo: _clientInfo{
 			client:   s._dirty.client,
 			tag:      s._dirty.tag,

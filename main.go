@@ -64,6 +64,11 @@ func main() {
 				Value:    300,
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:  "nginx-template",
+				Usage: "Шаблон для конфигурации форматов логов Nginx",
+				Value: "./template.conf",
+			},
 		},
 	}
 
@@ -124,9 +129,18 @@ func main() {
 			logger.ErrorLog(err)
 		}
 
+		template, err := lib.NewTemplate(lib.TemplateConfig{
+			Template: c.String("nginx-template"),
+		})
+
+		if err != nil {
+			logger.ErrorLog(err)
+		}
+
 		parser := lib.NewSyslogParser(logger, lib.ParserConfig{
 			PartsDelim:  constants.LOG_DELIM,
 			StreamDelim: constants.REQUEST_URI_DELIM,
+			Template:    template,
 		})
 
 		online := lib.NewOnline(lib.OnlineConfig{
