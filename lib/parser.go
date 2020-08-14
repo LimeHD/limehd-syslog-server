@@ -137,7 +137,7 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	}
 
 	// @see readme
-	streamUri := _safeSplitUri(valueOf("uri"), s.config.StreamDelim)
+	streamUri := safeSplitUri(valueOf("uri"), s.config.StreamDelim)
 	_req._splitUri = s.streamParts(streamUri)
 
 	return Log{
@@ -156,17 +156,17 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 			upstreamStatus:       "",
 		},
 		_http: _http{
-			httpReferer:       _getOrUnknown(valueOf("http_referer")),
-			httpVia:           _getOrUnknown(valueOf("http_via")),
-			httpXForwardedFor: _getOrUnknown(valueOf("http_x_forwarded_for")),
-			httpUserAgent:     _getOrUnknown(valueOf("http_user_agent")),
-			sentHttpXProfile:  _getOrUnknown(valueOf("sent_http_x_profile")),
+			httpReferer:       getOf(valueOf("http_referer")),
+			httpVia:           getOf(valueOf("http_via")),
+			httpXForwardedFor: getOf(valueOf("http_x_forwarded_for")),
+			httpUserAgent:     getOf(valueOf("http_user_agent")),
+			sentHttpXProfile:  getOf(valueOf("sent_http_x_profile")),
 		},
 		_connection: _connection{
-			connectionRequests: _safeStringToInt(valueOf("connection_requests")),
+			connectionRequests: safeStringToInt(valueOf("connection_requests")),
 			connection:         valueOf("connection"),
 		},
-		bytesSent: _safeStringToInt(valueOf("bytes_sent")),
+		bytesSent: safeStringToInt(valueOf("bytes_sent")),
 		_clientInfo: _clientInfo{
 			client:   s._dirty.client,
 			tag:      s._dirty.tag,
@@ -177,10 +177,10 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 
 func (s SyslogParser) toSlice(parts format.LogParts) _logSlice {
 	return _logSlice{
-		client:   _safeInterfaceToString(parts["client"]),
-		content:  _safeInterfaceToString(parts["content"]),
-		tag:      _safeInterfaceToString(parts["tag"]),
-		hostname: _safeInterfaceToString(parts["hostname"]),
+		client:   safeInterfaceToString(parts["client"]),
+		content:  safeInterfaceToString(parts["content"]),
+		tag:      safeInterfaceToString(parts["tag"]),
+		hostname: safeInterfaceToString(parts["hostname"]),
 	}
 }
 
@@ -298,7 +298,7 @@ func (sp _splitUri) Quality() string {
 
 // safe methods
 
-func _safeInterfaceToString(value interface{}) string {
+func safeInterfaceToString(value interface{}) string {
 	if value == nil {
 		return ""
 	}
@@ -306,7 +306,7 @@ func _safeInterfaceToString(value interface{}) string {
 	return value.(string)
 }
 
-func _safeStringToInt(value string) int {
+func safeStringToInt(value string) int {
 	converted, err := strconv.Atoi(value)
 
 	if err != nil {
@@ -316,11 +316,11 @@ func _safeStringToInt(value string) int {
 	return converted
 }
 
-func _safeSplitUri(uri string, delim string) []string {
+func safeSplitUri(uri string, delim string) []string {
 	return strings.Split(uri, delim)
 }
 
-func _getOrUnknown(value string) string {
+func getOf(value string) string {
 	if len(value) == 0 || value == constants.EMPTY_VALUE {
 		return constants.UNKNOWN
 	}
