@@ -33,7 +33,7 @@ func NewFileLogger(config LoggerConfig) Logger {
 			log.Println(constants.LOG_FILE_ON_EXIST)
 		}
 
-		handler, err := _createFileLogger(config.Logfile)
+		handler, err := createFileLogger(config.Logfile)
 
 		if err != nil {
 			log.Fatal(err)
@@ -50,12 +50,16 @@ func NewFileLogger(config LoggerConfig) Logger {
 	}
 }
 
-func _createFileLogger(logfile string) (*os.File, error) {
+func createFileLogger(logfile string) (*os.File, error) {
 	return os.OpenFile(logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 }
 
 func (f FileLogger) ErrorLog(error error) {
-	log.Fatalf("[LIMEHD SYSLOG ERROR]: %v", error)
+	if f.IsDevelopment() {
+		log.Fatalf("[LIMEHD SYSLOG ERROR]: %v", error)
+	} else {
+		f.WarningLog(error)
+	}
 }
 
 func (f FileLogger) InfoLog(msg interface{}) {

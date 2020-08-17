@@ -91,7 +91,7 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 		return err
 	}
 
-	pt, err := i.CreatePoint(i.Measurement,
+	pt, err := i.createPoint(i.Measurement,
 		tags{
 			"country_name":     params.CountryName,
 			"asn_number":       strconv.FormatUint(uint64(params.AsnNumber), 10),
@@ -126,7 +126,7 @@ func (i InfluxClient) PointOnline(params InfluxOnlineRequestParams) error {
 
 	// формируем данные пачками для отправки в influx
 	for name, channel := range params.Channels {
-		pt, err := i.CreatePoint(i.MeasurementOnline,
+		pt, err := i.createPoint(i.MeasurementOnline,
 			tags{
 				"channel": name,
 			},
@@ -149,7 +149,8 @@ func (i InfluxClient) PointOnline(params InfluxOnlineRequestParams) error {
 	return nil
 }
 
-func (i InfluxClient) CreatePoint(m string, t tags, f fields) (*client.Point, error) {
+// todo временную метку нужно брать с самого запроса
+func (i InfluxClient) createPoint(m string, t tags, f fields) (*client.Point, error) {
 	return client.NewPoint(m, t, f, time.Now())
 }
 
