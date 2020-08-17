@@ -137,7 +137,7 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 	}
 
 	// @see readme
-	streamUri := safeSplitUri(valueOf("uri"), s.config.StreamDelim)
+	streamUri := splitUri(valueOf("uri"), s.config.StreamDelim)
 	_req._splitUri = s.streamParts(streamUri)
 
 	return Log{
@@ -163,10 +163,10 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 			sentHttpXProfile:  getIf(valueOf("sent_http_x_profile")),
 		},
 		_connection: _connection{
-			connectionRequests: safeStringToInt(valueOf("connection_requests")),
+			connectionRequests: strToInt(valueOf("connection_requests")),
 			connection:         valueOf("connection"),
 		},
-		bytesSent: safeStringToInt(valueOf("bytes_sent")),
+		bytesSent: strToInt(valueOf("bytes_sent")),
 		_clientInfo: _clientInfo{
 			client:   s._dirty.client,
 			tag:      s._dirty.tag,
@@ -177,10 +177,10 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 
 func (s SyslogParser) toSlice(parts format.LogParts) _logSlice {
 	return _logSlice{
-		client:   safeInterfaceToString(parts["client"]),
-		content:  safeInterfaceToString(parts["content"]),
-		tag:      safeInterfaceToString(parts["tag"]),
-		hostname: safeInterfaceToString(parts["hostname"]),
+		client:   ifaceToStr(parts["client"]),
+		content:  ifaceToStr(parts["content"]),
+		tag:      ifaceToStr(parts["tag"]),
+		hostname: ifaceToStr(parts["hostname"]),
 	}
 }
 
@@ -334,7 +334,7 @@ func (sp _splitUri) Quality() string {
 
 // safe methods
 
-func safeInterfaceToString(value interface{}) string {
+func ifaceToStr(value interface{}) string {
 	if value == nil {
 		return ""
 	}
@@ -342,7 +342,7 @@ func safeInterfaceToString(value interface{}) string {
 	return value.(string)
 }
 
-func safeStringToInt(value string) int {
+func strToInt(value string) int {
 	converted, err := strconv.Atoi(value)
 
 	if err != nil {
@@ -352,7 +352,7 @@ func safeStringToInt(value string) int {
 	return converted
 }
 
-func safeSplitUri(uri string, delim string) []string {
+func splitUri(uri string, delim string) []string {
 	return strings.Split(uri, delim)
 }
 
