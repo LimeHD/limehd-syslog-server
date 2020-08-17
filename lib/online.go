@@ -9,15 +9,17 @@ import (
 
 type (
 	Online struct {
-		mt            *sync.RWMutex
-		connections   map[string]ChannelConnections
-		lastFlushedAt int64
-		duration      int64
+		mt               *sync.RWMutex
+		connections      map[string]ChannelConnections
+		lastFlushedAt    int64
+		duration         int64
+		scheduleCallback func(*Online)
 	}
 
 	OnlineConfig struct {
 		// 5 минутные интевалы, настраиваются из вне
-		OnlineDuration int64
+		OnlineDuration   int64
+		ScheduleCallback func(*Online)
 	}
 
 	ChannelConnections struct {
@@ -43,6 +45,7 @@ func NewOnline(config OnlineConfig) Online {
 	o.setFlushedAt()
 	o.connections = map[string]ChannelConnections{}
 	o.duration = config.OnlineDuration
+	o.scheduleCallback = config.ScheduleCallback
 
 	return o
 }
@@ -95,11 +98,11 @@ func (o Online) Contains(i UniqueIdentity) bool {
 
 // внутренний планировщик для отправки данны в influx
 // можно было бы и циклом
-func (o *Online) Scheduler(scheduleHandleFunction func()) {
+func (o *Online) Scheduler() {
 schedule:
 	time.Sleep(time.Second * time.Duration(o.duration))
 
-	scheduleHandleFunction()
+	o.scheduleCallback(o)
 
 	goto schedule
 }

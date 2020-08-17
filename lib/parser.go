@@ -116,15 +116,15 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 		return Log{}, errors.New(withMessage(constants.NOT_RECOGNIZE_LOGS, s._dirty.content))
 	}
 
-	_logFormatParts := strings.Split(s._dirty.content, s.config.PartsDelim)
+	nginxLogs := strings.Split(s._dirty.content, s.config.PartsDelim)
 
 	if s.logger.IsDevelopment() {
-		for k, v := range _logFormatParts {
+		for k, v := range nginxLogs {
 			s.logger.InfoLog(fmt.Sprintf("%d => %v", k, v))
 		}
 	}
 
-	valueOf := s.template.CreateTemplateParser(_logFormatParts)
+	valueOf := s.template.MakeTemplateClosure(nginxLogs)
 
 	_req := _request{
 		host:           valueOf("host"),
@@ -156,11 +156,11 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 			upstreamStatus:       "",
 		},
 		_http: _http{
-			httpReferer:       getOf(valueOf("http_referer")),
-			httpVia:           getOf(valueOf("http_via")),
-			httpXForwardedFor: getOf(valueOf("http_x_forwarded_for")),
-			httpUserAgent:     getOf(valueOf("http_user_agent")),
-			sentHttpXProfile:  getOf(valueOf("sent_http_x_profile")),
+			httpReferer:       getIf(valueOf("http_referer")),
+			httpVia:           getIf(valueOf("http_via")),
+			httpXForwardedFor: getIf(valueOf("http_x_forwarded_for")),
+			httpUserAgent:     getIf(valueOf("http_user_agent")),
+			sentHttpXProfile:  getIf(valueOf("sent_http_x_profile")),
 		},
 		_connection: _connection{
 			connectionRequests: safeStringToInt(valueOf("connection_requests")),
@@ -320,7 +320,7 @@ func safeSplitUri(uri string, delim string) []string {
 	return strings.Split(uri, delim)
 }
 
-func getOf(value string) string {
+func getIf(value string) string {
 	if len(value) == 0 || value == constants.EMPTY_VALUE {
 		return constants.UNKNOWN
 	}

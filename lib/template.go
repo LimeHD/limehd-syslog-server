@@ -10,7 +10,7 @@ import (
 
 type (
 	Template struct {
-		configurationMap map[string]int
+		blueprint map[string]int
 	}
 
 	TemplateConfig struct {
@@ -25,9 +25,9 @@ func NewTemplate(config TemplateConfig) (Template, error) {
 }
 
 // создает замыкание для последующего использования,как
-// valueOf := t.CreateTemplateParser([]string)
+// valueOf := t.MakeTemplateClosure([]string)
 // _ = valueOf("host")
-func (t Template) CreateTemplateParser(from []string) func(string) string {
+func (t Template) MakeTemplateClosure(from []string) func(string) string {
 	s := from
 	return func(key string) string {
 		return t.valueOf(key, s)
@@ -52,7 +52,7 @@ func (t Template) valueOf(key string, from []string) string {
 
 // определяем индекс по названию ключа
 func (t Template) pos(key string) int {
-	if pos, ok := t.configurationMap[t.key(key)]; ok {
+	if pos, ok := t.blueprint[t.key(key)]; ok {
 		return pos
 	}
 	return -1
@@ -64,7 +64,7 @@ func (t *Template) load(template string) error {
 	}
 
 	if content, err := t.read(template); err == nil {
-		t.configurationMap = t.parse(content)
+		t.blueprint = t.parse(content)
 		return nil
 	}
 

@@ -13,65 +13,10 @@ const version = "0.3.11" // Automaticaly updated // Automaticaly updated // Auto
 
 func main() {
 	app := &cli.App{
-		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:  "debug",
-				Usage: "Режим отладки - детализирует этапы работы сервиса, также в данном режиме все логи отправляются в stdout",
-			},
-			&cli.StringFlag{
-				Name:     "bind-address",
-				Usage:    "IP и порт слушаетля syslog, например: 0.0.0.0:514",
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:     "log",
-				Usage:    "Файл, куда будут складываться логи",
-				Required: false,
-			},
-			&cli.StringFlag{
-				Name:  "maxmind",
-				Usage: "Файл базы данных MaxMind с расширением .mmdb",
-				Value: constants.DEFAULT_MAXMIND_DATABASE,
-			},
-			&cli.StringFlag{
-				Name:  "maxmind-asn",
-				Usage: "Файл базы данных MaxMind ASN с расширением .mmdb для автономных систем",
-				Value: constants.DEFAULT_MAXMIND_ASN_DATABASE,
-			},
-			&cli.StringFlag{
-				Name:     "influx-url",
-				Usage:    "URL подключения к Influx, например: http://0.0.0.0:8086",
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:     "influx-db",
-				Usage:    "Название базы данных в Influx",
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:     "influx-measurement",
-				Usage:    "Название измерения (measurement) в Influx",
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:     "influx-measurement-online",
-				Usage:    "Название измерения (measurement) в Influx для счетчиков online пользователей",
-				Required: true,
-			},
-			&cli.Int64Flag{
-				Name:     "online-duration",
-				Usage:    "За какой промежуток агрегировать уникальных пользователей (в секундах)",
-				Value:    300,
-				Required: true,
-			},
-			&cli.StringFlag{
-				Name:  "nginx-template",
-				Usage: "Шаблон для конфигурации форматов логов Nginx",
-				Value: "./template.conf",
-			},
-		},
+		Flags: CliFlags,
 	}
 
+	// todo вынести инициализацию всех компонентов
 	app.Action = func(c *cli.Context) error {
 		var err error
 
@@ -145,58 +90,46 @@ func main() {
 
 		online := lib.NewOnline(lib.OnlineConfig{
 			OnlineDuration: c.Int64("online-duration"),
-		})
+			ScheduleCallback: func(o *lib.Online) {
+				channelConnections := o.Connections()
+				err := influx.PointOnline(lib.InfluxOnlineRequestParams{
+					Channels: channelConnections,
+				})
 
-		go online.Scheduler(func() {
-			channelConnections := online.Connections()
-			err := influx.PointOnline(lib.InfluxOnlineRequestParams{
-				Channels: channelConnections,
-			})
-
-			if err != nil {
-				if !logger.IsDevelopment() {
-					logger.WarningLog(err)
-				} else {
+				if err != nil {
 					logger.ErrorLog(err)
 				}
-			}
 
-			if logger.IsDevelopment() {
-				logger.InfoLog(fmt.Sprintf("Flushed connections: %d", channelConnections))
-			}
+				if logger.IsDevelopment() {
+					logger.InfoLog(fmt.Sprintf("Flushed connections: %d", channelConnections))
+				}
 
-			online.Flush()
+				o.Flush()
+			},
 		})
 
+		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
 				result, err := parser.Parse(logParts)
 
 				if err != nil {
-					if !logger.IsDevelopment() {
-						logger.WarningLog(err)
-						continue
-					}
-
 					logger.ErrorLog(err)
+					continue
 				}
 
-				finderResult, err := geoFinder.Find(result.GetRemoteAddr())
+				finder, err := geoFinder.Find(result.GetRemoteAddr())
 
 				if err != nil {
-					if !logger.IsDevelopment() {
-						logger.WarningLog(err)
-						continue
-					}
-
 					logger.ErrorLog(err)
+					continue
 				}
 
 				err = influx.Point(lib.InfluxRequestParams{
 					InfluxRequestTags: lib.InfluxRequestTags{
-						CountryName:  finderResult.GetCountryIsoCode(),
-						AsnNumber:    finderResult.GetOrganizationNumber(),
-						AsnOrg:       finderResult.GetOrganization(),
+						CountryName:  finder.GetCountryIsoCode(),
+						AsnNumber:    finder.GetOrganizationNumber(),
+						AsnOrg:       finder.GetOrganization(),
 						Channel:      result.GetChannel(),
 						StreamServer: result.GetClientAddr(),
 						Host:         result.GetStreamingServer(),
@@ -208,12 +141,8 @@ func main() {
 				})
 
 				if err != nil {
-					if !logger.IsDevelopment() {
-						logger.WarningLog(err)
-						continue
-					}
-
 					logger.ErrorLog(err)
+					continue
 				}
 
 				// Пользователи онлайн

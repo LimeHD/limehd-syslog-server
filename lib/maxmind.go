@@ -46,14 +46,14 @@ func NewGeoFinder(config GeoFinderConfig) (GeoFinder, error) {
 	var err error
 
 	g := GeoFinder{}
-	g.reader, err = g._openDabase(config.MmdbPath)
+	g.reader, err = g.openDatabase(config.MmdbPath)
 	g._logger = config.Logger
 
 	if err != nil {
 		return GeoFinder{}, err
 	}
 
-	g.asnReader, err = g._openDabase(config.AsnMmdbPath)
+	g.asnReader, err = g.openDatabase(config.AsnMmdbPath)
 
 	if err != nil {
 		return GeoFinder{}, err
@@ -143,7 +143,7 @@ func (r GeoFinderResult) GetOrganizationNumber() uint {
 
 //
 
-func (g GeoFinder) _openDabase(mmdbPath string) (*geoip2.Reader, error) {
+func (g GeoFinder) openDatabase(mmdbPath string) (*geoip2.Reader, error) {
 	return geoip2.Open(mmdbPath)
 }
 
