@@ -202,6 +202,7 @@ func (s SyslogParser) defaultStreamUri() _splitUri {
 }
 
 func (s SyslogParser) streamParts(stream []string) _splitUri {
+	// /streaming/muztv/324/vl2w/segment-1597220444-01972046.ts
 	if isInetraTranscoder(len(stream)) {
 		return _splitUri{
 			prefix:  stream[1],
@@ -211,23 +212,58 @@ func (s SyslogParser) streamParts(stream []string) _splitUri {
 		}
 	}
 
-	if isFlussonicTranscoder(len(stream)) {
-		// tracks-v1a1
-		quality := strings.Split(stream[2], "-")
-
-		if len(quality) == 0 {
-			quality = append(quality, constants.UNKNOWN)
+	// /streaming/karusel/324/variable.m3u8
+	if isInetraMultibitrate(len(stream)) {
+		return _splitUri{
+			prefix:  constants.UNKNOWN,
+			channel: stream[2],
+			quality: constants.UNKNOWN,
+			index:   stream[4],
 		}
+	}
 
+	// /domashniy/tracks-v1a1/2020/08/13/11/38/56-06000.ts
+	if isFlussonicTranscoder(len(stream)) {
+		quality := s.splitQuality(stream[2])
 		return _splitUri{
 			prefix:  stream[1],
 			channel: stream[1],
-			quality: quality[0],
+			quality: quality,
 			index:   stream[8],
 		}
 	}
 
+	// /karusel/tracks-v1a1/mono.m3u8
+	if isFlussonicPlaylist(len(stream)) {
+		quality := s.splitQuality(stream[2])
+		return _splitUri{
+			prefix:  constants.UNKNOWN,
+			channel: stream[1],
+			quality: quality,
+			index:   stream[3],
+		}
+	}
+
+	// /karusel/index.m3u8
+	if isFlussonicMultibitrate(len(stream)) {
+		return _splitUri{
+			prefix:  constants.UNKNOWN,
+			channel: stream[1],
+			quality: constants.UNKNOWN,
+			index:   stream[2],
+		}
+	}
+
 	return s.defaultStreamUri()
+}
+
+// tracks-v1a1
+func (s SyslogParser) splitQuality(quality string) string {
+	q := strings.Split(quality, "-")
+	if len(q) == 2 {
+		return q[1]
+	}
+	return constants.UNKNOWN
 }
 
 // export getters

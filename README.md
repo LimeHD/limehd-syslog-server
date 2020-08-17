@@ -97,7 +97,12 @@
     - `/domashniy/tracks-v1a1/2020/08/13/11/38/56-06000.ts`
 - Inetra Transcoder: (6)
     - `/streaming/muztv/324/vl2w/segment-1597220444-01972046.ts`
-    - `/streaming/muztv/324/???/csegment.ts`
+    - `/streaming/muztv/324/vl2w/csegment.ts`
+- Файлы плейлистов медиа-контента HLS формата: (не годится счетчика уникальных пользователей)
+    - `/karusel/tracks-v1a1/mono.m3u8` - flussonic
+    - `/karusel/index.m3u8` - flussonic (multi bitrate, вариативного вещания)
+    - `/streaming/rossia1nn/324/vm2w/playlist.m3u8` - inetra
+    - `/streaming/karusel/324/variable.m3u8` - inetra (multi bitrate, вариативного вещания)
 Где:
 
 * `vh1w` - `quality`
