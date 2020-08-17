@@ -6,6 +6,7 @@ import (
 	"github.com/LimeHD/limehd-syslog-server/lib"
 	"github.com/urfave/cli"
 	"gopkg.in/mcuadros/go-syslog.v2"
+	"gopkg.in/mcuadros/go-syslog.v2/format"
 	"os"
 )
 
@@ -108,59 +109,76 @@ func main() {
 			},
 		})
 
+		sendToInfluxCallback := func(receive lib.Receiver) {
+			err = influx.Point(lib.InfluxRequestParams{
+				InfluxRequestTags: lib.InfluxRequestTags{
+					CountryName:  receive.Finder.GetCountryIsoCode(),
+					AsnNumber:    receive.Finder.GetOrganizationNumber(),
+					AsnOrg:       receive.Finder.GetOrganization(),
+					Channel:      receive.Parser.GetChannel(),
+					StreamServer: receive.Parser.GetClientAddr(),
+					Host:         receive.Parser.GetStreamingServer(),
+					Quality:      receive.Parser.GetQuality(),
+				},
+				InfluxRequestFields: lib.InfluxRequestFields{
+					BytesSent: receive.Parser.GetBytesSent(),
+				},
+			})
+
+			if err != nil {
+				logger.ErrorLog(err)
+				return
+			}
+
+			// Пользователи онлайн
+			unique := lib.UniqueIdentity{
+				Channel: receive.Parser.GetChannel(),
+				UniqueCombination: lib.UniqueCombination{
+					Ip:        receive.Parser.GetRemoteAddr(),
+					UserAgent: receive.Parser.GetUserAgent(),
+				},
+			}
+
+			online.Peek(unique)
+
+			// todo удалить
+			if logger.IsDevelopment() {
+				logger.InfoLog(online.Connections())
+			}
+		}
+
+		receiveAndParseLogsCallback := func(p format.LogParts) (lib.Receiver, error) {
+			result, err := parser.Parse(p)
+
+			if err != nil {
+				logger.ErrorLog(err)
+				return lib.Receiver{}, err
+			}
+
+			finder, err := geoFinder.Find(result.GetRemoteAddr())
+
+			if err != nil {
+				logger.ErrorLog(err)
+				return lib.Receiver{}, err
+			}
+
+			return lib.Receiver{
+				Parser: result,
+				Finder: finder,
+			}, nil
+		}
+
+		pool := lib.NewPool(lib.PoolConfig{
+			ListenerCallback: sendToInfluxCallback,
+			ReceiverCallback: receiveAndParseLogsCallback,
+			MaxParallel:      5,
+		})
+
+		go pool.Listen()
 		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
-				result, err := parser.Parse(logParts)
-
-				if err != nil {
-					logger.ErrorLog(err)
-					continue
-				}
-
-				finder, err := geoFinder.Find(result.GetRemoteAddr())
-
-				if err != nil {
-					logger.ErrorLog(err)
-					continue
-				}
-
-				err = influx.Point(lib.InfluxRequestParams{
-					InfluxRequestTags: lib.InfluxRequestTags{
-						CountryName:  finder.GetCountryIsoCode(),
-						AsnNumber:    finder.GetOrganizationNumber(),
-						AsnOrg:       finder.GetOrganization(),
-						Channel:      result.GetChannel(),
-						StreamServer: result.GetClientAddr(),
-						Host:         result.GetStreamingServer(),
-						Quality:      result.GetQuality(),
-					},
-					InfluxRequestFields: lib.InfluxRequestFields{
-						BytesSent: result.GetBytesSent(),
-					},
-				})
-
-				if err != nil {
-					logger.ErrorLog(err)
-					continue
-				}
-
-				// Пользователи онлайн
-
-				unique := lib.UniqueIdentity{
-					Channel: result.GetChannel(),
-					UniqueCombination: lib.UniqueCombination{
-						Ip:        result.GetRemoteAddr(),
-						UserAgent: result.GetUserAgent(),
-					},
-				}
-
-				online.Peek(unique)
-
-				// todo удалить
-				if logger.IsDevelopment() {
-					logger.InfoLog(online.Connections())
-				}
+				go pool.Receive(logParts)
 			}
 		}(channel)
 
