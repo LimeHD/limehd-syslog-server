@@ -124,7 +124,7 @@ func (s SyslogParser) Parse(parts format.LogParts) (Log, error) {
 		}
 	}
 
-	valueOf := s.template.MakeTemplateClosure(nginxLogs)
+	valueOf := s.template.makeClosure(nginxLogs)
 
 	_req := _request{
 		host:           valueOf("host"),
