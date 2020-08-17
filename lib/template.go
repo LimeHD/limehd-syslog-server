@@ -25,12 +25,11 @@ func NewTemplate(config TemplateConfig) (Template, error) {
 }
 
 // создает замыкание для последующего использования,как
-// valueOf := t.MakeTemplateClosure([]string)
+// valueOf := t.makeClosure([]string)
 // _ = valueOf("host")
-func (t Template) MakeTemplateClosure(from []string) func(string) string {
-	s := from
+func (t Template) makeClosure(from []string) func(string) string {
 	return func(key string) string {
-		return t.valueOf(key, s)
+		return t.valueOf(key, from)
 	}
 }
 
