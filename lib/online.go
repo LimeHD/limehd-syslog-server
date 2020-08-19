@@ -125,7 +125,7 @@ func (o Online) sorted() SortedList {
 		index++
 	}
 	o.mt.RUnlock()
-	sort.Sort(s)
+	sort.Sort(sort.Reverse(s))
 	return s
 }
 
