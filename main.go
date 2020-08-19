@@ -101,7 +101,7 @@ func main() {
 				}
 
 				if logger.IsDevelopment() {
-					logger.InfoLog(fmt.Sprintf("Flushed connections: %d", channelConnections))
+					logger.InfoLog(fmt.Sprintf("Flushed connections: %v", channelConnections))
 				}
 
 				logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
