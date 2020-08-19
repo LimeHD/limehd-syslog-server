@@ -1,8 +1,11 @@
 package lib
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"sort"
 	"sync"
 	"time"
 )
@@ -81,6 +84,62 @@ func (o Online) Count() int {
 	defer o.mt.RUnlock()
 	return len(o.Connections())
 }
+
+func (o Online) Total() int {
+	o.mt.RLock()
+	total := 0
+	for _, channel := range o.connections {
+		total += channel.Count()
+	}
+	o.mt.RUnlock()
+	return total
+}
+
+func (o Online) Top(n int) SortedList {
+	s := o.sorted()
+	if len(s) < n {
+		return s
+	}
+	return s[0:n]
+}
+
+// реализуем интерфейс для печати онлайн
+// fmt.Println(online)
+func (o Online) String() string {
+	var out bytes.Buffer
+	// first new line
+	out.WriteString("\n")
+	for _, v := range o.Top(10) {
+		out.WriteString(fmt.Sprintf("Channel %s -> %d\n", v.key, v.value))
+	}
+	return out.String()
+}
+
+// сортируем мапу из каналов и количества соединений
+func (o Online) sorted() SortedList {
+	o.mt.RLock()
+	s := make(SortedList, len(o.connections))
+	index := 0
+	for k, v := range o.connections {
+		s[index] = sorted{k, v.Count()}
+		index++
+	}
+	o.mt.RUnlock()
+	sort.Sort(s)
+	return s
+}
+
+type (
+	sorted struct {
+		key   string
+		value int
+	}
+	SortedList []sorted
+)
+
+func (s SortedList) Len() int           { return len(s) }
+func (s SortedList) Less(i, j int) bool { return s[i].value < s[j].value }
+func (s SortedList) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 // существует ли данный пользователь для данного канала
 func (o Online) Contains(i UniqueIdentity) bool {
