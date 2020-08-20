@@ -174,7 +174,7 @@ func main() {
 		pool := lib.NewPool(lib.PoolConfig{
 			ListenerCallback: sendToInfluxCallback,
 			ReceiverCallback: receiveAndParseLogsCallback,
-			MaxParallel:      0,
+			MaxParallel:      100,
 		})
 		pool.Listen()
 
