@@ -176,12 +176,12 @@ func main() {
 			ReceiverCallback: receiveAndParseLogsCallback,
 			MaxParallel:      0,
 		})
+		pool.Listen()
 
-		go pool.Listen()
 		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
-				go pool.Receive(logParts)
+				pool.Receive(logParts)
 			}
 		}(channel)
 
