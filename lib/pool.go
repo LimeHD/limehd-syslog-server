@@ -30,11 +30,7 @@ func NewPool(c PoolConfig) *Pool {
 	return p
 }
 
-func (p Pool) send(r Receiver) {
-	p.pool <- r
-}
-
-func (p Pool) Receive(parts format.LogParts) {
+func (p Pool) Task(parts format.LogParts) {
 	p.taskPool <- func() (Receiver, error) {
 		return p.receiver(parts)
 	}
@@ -43,6 +39,10 @@ func (p Pool) Receive(parts format.LogParts) {
 func (p Pool) Listen() {
 	go p.worker()
 	go p.sender()
+}
+
+func (p Pool) send(r Receiver) {
+	p.pool <- r
 }
 
 func (p Pool) sender() {

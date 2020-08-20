@@ -174,14 +174,14 @@ func main() {
 		pool := lib.NewPool(lib.PoolConfig{
 			ListenerCallback: sendToInfluxCallback,
 			ReceiverCallback: receiveAndParseLogsCallback,
-			MaxParallel:      100,
+			MaxParallel:      c.Int("max-workers"),
 		})
 		pool.Listen()
 
 		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
-				pool.Receive(logParts)
+				pool.Task(logParts)
 			}
 		}(channel)
 

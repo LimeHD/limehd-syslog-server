@@ -61,4 +61,9 @@ var CliFlags = []cli.Flag{
 		Usage: "Шаблон для конфигурации форматов логов Nginx",
 		Value: "./template.conf",
 	},
+	&cli.IntFlag{
+		Name:  "max-workers",
+		Usage: "Максимальная емкость воркеров для обработки запросов",
+		Value: 200,
+	},
 }
