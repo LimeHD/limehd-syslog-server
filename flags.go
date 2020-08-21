@@ -64,16 +64,16 @@ var CliFlags = []cli.Flag{
 	&cli.IntFlag{
 		Name:  "pool-size",
 		Usage: "Максимальная емкость воркеров для обработки запросов",
-		Value: 3000000,
+		Value: 10000000,
 	},
 	&cli.IntFlag{
 		Name:  "max-parallel",
 		Usage: "Максимальное количество параллельных обработчиков для входящих UPD запросов",
-		Value: 1000,
+		Value: 1500,
 	},
 	&cli.IntFlag{
 		Name:  "worker-count",
 		Usage: "Максимальное количество обработчиков логов и отправителей в Influx",
-		Value: 1500,
+		Value: 3000,
 	},
 }
