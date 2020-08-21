@@ -64,6 +64,11 @@ var CliFlags = []cli.Flag{
 	&cli.IntFlag{
 		Name:  "pool-size",
 		Usage: "Максимальная емкость воркеров для обработки запросов",
+		Value: 4000000,
+	},
+	&cli.IntFlag{
+		Name:  "worker-pool-size",
+		Usage: "Максимальная емкость воркеров для обработки запросов",
 		Value: 2000000,
 	},
 	&cli.IntFlag{

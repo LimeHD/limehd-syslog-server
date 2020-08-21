@@ -177,6 +177,7 @@ func main() {
 			PoolSize:         c.Int("pool-size"),
 			WorkersCount:     c.Int("worker-count"),
 			SenderCount:      c.Int("sender-count"),
+			WorkerPoolSize:   c.Int("worker-pool-size"),
 			WorkerFn: func(p *lib.Pool, channel syslog.LogPartsChannel) {
 				for logParts := range channel {
 					p.Task(logParts)

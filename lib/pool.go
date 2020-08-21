@@ -19,6 +19,7 @@ type (
 		ListenerCallback func(q Receiver)
 		ReceiverCallback func(p format.LogParts) (Receiver, error)
 		PoolSize         int
+		WorkerPoolSize   int
 		WorkersCount     int
 		SenderCount      int
 		WorkerFn         func(pool *Pool, channel syslog.LogPartsChannel)
@@ -31,7 +32,7 @@ type (
 
 func NewPool(c PoolConfig) *Pool {
 	p := new(Pool)
-	p.pool = make(chan Receiver, c.PoolSize)
+	p.pool = make(chan Receiver, c.WorkerPoolSize)
 	p.taskPool = make(chan func() (Receiver, error), c.PoolSize)
 	p.listener = c.ListenerCallback
 	p.receiver = c.ReceiverCallback
