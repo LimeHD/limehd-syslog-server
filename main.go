@@ -186,7 +186,7 @@ func main() {
 
 		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
-			for i := 0; i < 450; i++ {
+			for i := 0; i < 500; i++ {
 				go worker(channel)
 			}
 		}(channel)
