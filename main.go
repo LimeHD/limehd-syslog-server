@@ -121,6 +121,10 @@ func main() {
 					continue
 				}
 
+				if !result.IsAvailableUri() {
+					continue
+				}
+
 				finder, err := geoFinder.Find(result.GetRemoteAddr())
 
 				if err != nil {

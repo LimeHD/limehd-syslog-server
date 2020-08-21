@@ -44,3 +44,17 @@ func (l Log) IsPlaylistStream() bool {
 func (l Log) IsMediaStream() bool {
 	return isMediaFile(l._splitUri.index)
 }
+
+// доступны только ссылки следующего вида
+// - /tvcnn/tracks-v3a1/2020/08/13/11/38/52-06000.ts
+// - /streaming/muztv/324/vl2w/segment-1597220444-01972046.ts
+func (l Log) IsAvailableUri() bool {
+	if strings.Contains(l._request.uri, "tracks") {
+		return true
+	}
+	if strings.Contains(l._request.uri, "segment") {
+		return true
+	}
+
+	return false
+}
