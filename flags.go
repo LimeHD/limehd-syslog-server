@@ -74,6 +74,6 @@ var CliFlags = []cli.Flag{
 	&cli.IntFlag{
 		Name:  "worker-count",
 		Usage: "Максимальное количество обработчиков логов и отправителей в Influx",
-		Value: 17,
+		Value: 20,
 	},
 }
