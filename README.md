@@ -47,6 +47,7 @@
         ...
       ```
     </details>
+- [x] UDP status: `$ watch -n1 netstat -suna`
 
 ### Боевой сервер
 
