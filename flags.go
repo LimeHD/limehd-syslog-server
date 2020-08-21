@@ -64,6 +64,6 @@ var CliFlags = []cli.Flag{
 	&cli.IntFlag{
 		Name:  "max-workers",
 		Usage: "Максимальная емкость воркеров для обработки запросов",
-		Value: 5000,
+		Value: 220000,
 	},
 }
