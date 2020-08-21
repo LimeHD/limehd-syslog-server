@@ -174,21 +174,18 @@ func main() {
 		pool := lib.NewPool(lib.PoolConfig{
 			ListenerCallback: sendToInfluxCallback,
 			ReceiverCallback: receiveAndParseLogsCallback,
-			MaxParallel:      c.Int("max-workers"),
+			PoolSize:         c.Int("pool-size"),
+			WorkersCount:     c.Int("worker-count"),
+			WorkerFn: func(p *lib.Pool, channel syslog.LogPartsChannel) {
+				for logParts := range channel {
+					p.Task(logParts)
+				}
+			},
 		})
-		pool.Listen()
-
-		worker := func(channel syslog.LogPartsChannel) {
-			for logParts := range channel {
-				pool.Task(logParts)
-			}
-		}
 
 		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
-			for i := 0; i < 500; i++ {
-				go worker(channel)
-			}
+			pool.Run(channel, c.Int("max-parallel"))
 		}(channel)
 
 		server.Wait()
