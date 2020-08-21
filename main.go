@@ -176,6 +176,7 @@ func main() {
 			ReceiverCallback: receiveAndParseLogsCallback,
 			PoolSize:         c.Int("pool-size"),
 			WorkersCount:     c.Int("worker-count"),
+			SenderCount:      c.Int("sender-count"),
 			WorkerFn: func(p *lib.Pool, channel syslog.LogPartsChannel) {
 				for logParts := range channel {
 					p.Task(logParts)

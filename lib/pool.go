@@ -12,6 +12,7 @@ type (
 		listener func(q Receiver)
 		receiver func(p format.LogParts) (Receiver, error)
 		workers  int
+		senders  int
 		workerFn func(pool *Pool, channel syslog.LogPartsChannel)
 	}
 	PoolConfig struct {
@@ -19,6 +20,7 @@ type (
 		ReceiverCallback func(p format.LogParts) (Receiver, error)
 		PoolSize         int
 		WorkersCount     int
+		SenderCount      int
 		WorkerFn         func(pool *Pool, channel syslog.LogPartsChannel)
 	}
 	Receiver struct {
@@ -34,6 +36,7 @@ func NewPool(c PoolConfig) *Pool {
 	p.listener = c.ListenerCallback
 	p.receiver = c.ReceiverCallback
 	p.workers = c.WorkersCount
+	p.senders = c.SenderCount
 	p.workerFn = c.WorkerFn
 
 	p.listen()
