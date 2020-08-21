@@ -178,10 +178,16 @@ func main() {
 		})
 		pool.Listen()
 
-		go online.Scheduler()
-		go func(channel syslog.LogPartsChannel) {
+		worker := func(channel syslog.LogPartsChannel) {
 			for logParts := range channel {
 				pool.Task(logParts)
+			}
+		}
+
+		go online.Scheduler()
+		go func(channel syslog.LogPartsChannel) {
+			for i := 0; i < 10; i++ {
+				go worker(channel)
 			}
 		}(channel)
 
