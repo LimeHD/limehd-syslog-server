@@ -84,6 +84,6 @@ var CliFlags = []cli.Flag{
 	&cli.IntFlag{
 		Name:  "sender-count",
 		Usage: "Максимальное количество и отправителей в Influx",
-		Value: 20,
+		Value: 10,
 	},
 }
