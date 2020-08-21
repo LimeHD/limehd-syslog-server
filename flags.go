@@ -74,7 +74,7 @@ var CliFlags = []cli.Flag{
 	&cli.IntFlag{
 		Name:  "max-parallel",
 		Usage: "Максимальное количество параллельных обработчиков для входящих UPD запросов",
-		Value: 10,
+		Value: 15,
 	},
 	&cli.IntFlag{
 		Name:  "worker-count",
