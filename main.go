@@ -101,7 +101,7 @@ func main() {
 				}
 
 				if logger.IsDevelopment() {
-					logger.InfoLog(fmt.Sprintf("Flushed connections: %d", channelConnections))
+					logger.InfoLog(fmt.Sprintf("Flushed connections: %v", channelConnections))
 				}
 
 				logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
@@ -118,6 +118,10 @@ func main() {
 
 				if err != nil {
 					logger.ErrorLog(err)
+					continue
+				}
+
+				if !result.IsAvailableUri() {
 					continue
 				}
 
