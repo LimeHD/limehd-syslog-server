@@ -185,7 +185,6 @@ func main() {
 			},
 		})
 
-		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
 			pool.Run(channel, c.Int("max-parallel"))
 		}(channel)
