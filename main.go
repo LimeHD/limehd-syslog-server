@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/LimeHD/limehd-syslog-server/constants"
 	"github.com/LimeHD/limehd-syslog-server/lib"
 	"github.com/urfave/cli"
 	"gopkg.in/mcuadros/go-syslog.v2"
@@ -21,44 +20,16 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		var err error
 
-		logger := lib.NewFileLogger(lib.LoggerConfig{
-			Logfile: c.String("log"),
-			IsDev:   c.Bool("debug"),
-		})
+		service := lib.NewService(c)
+		logger := service.GetLogger()
+		finder := service.GetFinder()
+		influx := service.GetInfluxClient()
+		parser := service.GetParser()
 
 		lib.StartupMessage(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
 
-		geoFinder, err := lib.NewGeoFinder(lib.GeoFinderConfig{
-			MmdbPath:    c.String("maxmind"),
-			AsnMmdbPath: c.String("maxmind-asn"),
-			Logger:      logger,
-		})
-
-		if err != nil {
-			logger.ErrorLog(err)
-		}
-
-		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
-			Addr:              c.String("influx-url"),
-			Database:          c.String("influx-db"),
-			Logger:            logger,
-			Measurement:       c.String("influx-measurement"),
-			MeasurementOnline: c.String("influx-measurement-online"),
-		})
-
-		if err != nil {
-			logger.ErrorLog(err)
-		}
-
-		lib.Notifier(
-			logger,
-			geoFinder,
-			influx,
-		)
-
 		channel := make(syslog.LogPartsChannel)
 		handler := syslog.NewChannelHandler(channel)
-
 		server := syslog.NewServer()
 		// RFC5424 - не подходит
 		server.SetFormat(syslog.RFC3164)
@@ -75,58 +46,48 @@ func main() {
 			logger.ErrorLog(err)
 		}
 
-		template, err := lib.NewTemplate(lib.TemplateConfig{
-			Template: c.String("nginx-template"),
-		})
+		online := lib.NewOnline(
+			lib.OnlineConfig{
+				OnlineDuration: c.Int64("online-duration"),
+				ScheduleCallback: func(o *lib.Online) {
+					channelConnections := o.Connections()
+					err := influx.PointOnline(lib.InfluxOnlineRequestParams{
+						Channels: channelConnections,
+					})
 
-		if err != nil {
-			logger.ErrorLog(err)
-		}
+					if err != nil {
+						logger.ErrorLog(err)
+					}
 
-		parser := lib.NewSyslogParser(logger, lib.ParserConfig{
-			PartsDelim:  constants.LOG_DELIM,
-			StreamDelim: constants.REQUEST_URI_DELIM,
-			Template:    template,
-		})
+					if logger.IsDevelopment() {
+						logger.InfoLog(fmt.Sprintf("Flushed connections: %v", channelConnections))
+					}
 
-		online := lib.NewOnline(lib.OnlineConfig{
-			OnlineDuration: c.Int64("online-duration"),
-			ScheduleCallback: func(o *lib.Online) {
-				channelConnections := o.Connections()
-				err := influx.PointOnline(lib.InfluxOnlineRequestParams{
-					Channels: channelConnections,
-				})
+					logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
+					logger.InfoLog(o)
 
-				if err != nil {
-					logger.ErrorLog(err)
-				}
-
-				if logger.IsDevelopment() {
-					logger.InfoLog(fmt.Sprintf("Flushed connections: %v", channelConnections))
-				}
-
-				logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
-				logger.InfoLog(o)
-
-				o.Flush()
+					o.Flush()
+				},
 			},
-		})
+		)
 
 		sendToInfluxCallback := func(receive lib.Receiver) {
-			err = influx.Point(lib.InfluxRequestParams{
-				InfluxRequestTags: lib.InfluxRequestTags{
-					CountryName:  receive.Finder.GetCountryIsoCode(),
-					AsnNumber:    receive.Finder.GetOrganizationNumber(),
-					AsnOrg:       receive.Finder.GetOrganization(),
-					Channel:      receive.Parser.GetChannel(),
-					StreamServer: receive.Parser.GetClientAddr(),
-					Host:         receive.Parser.GetStreamingServer(),
-					Quality:      receive.Parser.GetQuality(),
+			err = influx.Point(
+				lib.InfluxRequestParams{
+					InfluxRequestTags: lib.InfluxRequestTags{
+						CountryName:  receive.Finder.GetCountryIsoCode(),
+						AsnNumber:    receive.Finder.GetOrganizationNumber(),
+						AsnOrg:       receive.Finder.GetOrganization(),
+						Channel:      receive.Parser.GetChannel(),
+						StreamServer: receive.Parser.GetClientAddr(),
+						Host:         receive.Parser.GetStreamingServer(),
+						Quality:      receive.Parser.GetQuality(),
+					},
+					InfluxRequestFields: lib.InfluxRequestFields{
+						BytesSent: receive.Parser.GetBytesSent(),
+					},
 				},
-				InfluxRequestFields: lib.InfluxRequestFields{
-					BytesSent: receive.Parser.GetBytesSent(),
-				},
-			})
+			)
 
 			if err != nil {
 				logger.ErrorLog(err)
@@ -158,7 +119,7 @@ func main() {
 				return lib.Receiver{}, err
 			}
 
-			finder, err := geoFinder.Find(result.GetRemoteAddr())
+			finderResult, err := finder.Find(result.GetRemoteAddr())
 
 			if err != nil {
 				logger.ErrorLog(err)
@@ -167,24 +128,27 @@ func main() {
 
 			return lib.Receiver{
 				Parser: result,
-				Finder: finder,
+				Finder: finderResult,
 			}, nil
 		}
 
-		pool := lib.NewPool(lib.PoolConfig{
-			ListenerCallback: sendToInfluxCallback,
-			ReceiverCallback: receiveAndParseLogsCallback,
-			PoolSize:         c.Int("pool-size"),
-			WorkersCount:     c.Int("worker-count"),
-			SenderCount:      c.Int("sender-count"),
-			WorkerPoolSize:   c.Int("worker-pool-size"),
-			WorkerFn: func(p *lib.Pool, channel syslog.LogPartsChannel) {
-				for logParts := range channel {
-					p.Task(logParts)
-				}
+		pool := lib.NewPool(
+			lib.PoolConfig{
+				ListenerCallback: sendToInfluxCallback,
+				ReceiverCallback: receiveAndParseLogsCallback,
+				PoolSize:         c.Int("pool-size"),
+				WorkersCount:     c.Int("worker-count"),
+				SenderCount:      c.Int("sender-count"),
+				WorkerPoolSize:   c.Int("worker-pool-size"),
+				WorkerFn: func(p *lib.Pool, channel syslog.LogPartsChannel) {
+					for logParts := range channel {
+						p.Task(logParts)
+					}
+				},
 			},
-		})
+		)
 
+		go online.Scheduler()
 		go func(channel syslog.LogPartsChannel) {
 			pool.Run(channel, c.Int("max-parallel"))
 		}(channel)
