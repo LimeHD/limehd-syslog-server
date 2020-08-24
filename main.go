@@ -72,20 +72,22 @@ func main() {
 		)
 
 		sendToInfluxCallback := func(receive lib.Receiver) {
-			err = influx.Point(lib.InfluxRequestParams{
-				InfluxRequestTags: lib.InfluxRequestTags{
-					CountryName:  receive.Finder.GetCountryIsoCode(),
-					AsnNumber:    receive.Finder.GetOrganizationNumber(),
-					AsnOrg:       receive.Finder.GetOrganization(),
-					Channel:      receive.Parser.GetChannel(),
-					StreamServer: receive.Parser.GetClientAddr(),
-					Host:         receive.Parser.GetStreamingServer(),
-					Quality:      receive.Parser.GetQuality(),
+			err = influx.Point(
+				lib.InfluxRequestParams{
+					InfluxRequestTags: lib.InfluxRequestTags{
+						CountryName:  receive.Finder.GetCountryIsoCode(),
+						AsnNumber:    receive.Finder.GetOrganizationNumber(),
+						AsnOrg:       receive.Finder.GetOrganization(),
+						Channel:      receive.Parser.GetChannel(),
+						StreamServer: receive.Parser.GetClientAddr(),
+						Host:         receive.Parser.GetStreamingServer(),
+						Quality:      receive.Parser.GetQuality(),
+					},
+					InfluxRequestFields: lib.InfluxRequestFields{
+						BytesSent: receive.Parser.GetBytesSent(),
+					},
 				},
-				InfluxRequestFields: lib.InfluxRequestFields{
-					BytesSent: receive.Parser.GetBytesSent(),
-				},
-			})
+			)
 
 			if err != nil {
 				logger.ErrorLog(err)
@@ -130,19 +132,21 @@ func main() {
 			}, nil
 		}
 
-		pool := lib.NewPool(lib.PoolConfig{
-			ListenerCallback: sendToInfluxCallback,
-			ReceiverCallback: receiveAndParseLogsCallback,
-			PoolSize:         c.Int("pool-size"),
-			WorkersCount:     c.Int("worker-count"),
-			SenderCount:      c.Int("sender-count"),
-			WorkerPoolSize:   c.Int("worker-pool-size"),
-			WorkerFn: func(p *lib.Pool, channel syslog.LogPartsChannel) {
-				for logParts := range channel {
-					p.Task(logParts)
-				}
+		pool := lib.NewPool(
+			lib.PoolConfig{
+				ListenerCallback: sendToInfluxCallback,
+				ReceiverCallback: receiveAndParseLogsCallback,
+				PoolSize:         c.Int("pool-size"),
+				WorkersCount:     c.Int("worker-count"),
+				SenderCount:      c.Int("sender-count"),
+				WorkerPoolSize:   c.Int("worker-pool-size"),
+				WorkerFn: func(p *lib.Pool, channel syslog.LogPartsChannel) {
+					for logParts := range channel {
+						p.Task(logParts)
+					}
+				},
 			},
-		})
+		)
 
 		go func(channel syslog.LogPartsChannel) {
 			pool.Run(channel, c.Int("max-parallel"))

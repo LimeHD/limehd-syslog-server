@@ -20,46 +20,57 @@ func NewService(c *cli.Context) *Service {
 
 	s := new(Service)
 
-	s.logger = NewFileLogger(LoggerConfig{
-		Logfile: c.String("log"),
-		IsDev:   c.Bool("debug"),
-	})
+	s.logger = NewFileLogger(
+		LoggerConfig{
+			Logfile: c.String("log"),
+			IsDev:   c.Bool("debug"),
+		},
+	)
 
-	geoFinder, err := NewGeoFinder(GeoFinderConfig{
-		MmdbPath:    c.String("maxmind"),
-		AsnMmdbPath: c.String("maxmind-asn"),
-		Logger:      s.logger,
-	})
-
-	if err != nil {
-		s.logger.ErrorLog(err)
-	}
-
-	influx, err := NewInfluxClient(InfluxClientConfig{
-		Addr:              c.String("influx-url"),
-		Database:          c.String("influx-db"),
-		Logger:            s.logger,
-		Measurement:       c.String("influx-measurement"),
-		MeasurementOnline: c.String("influx-measurement-online"),
-	})
+	geoFinder, err := NewGeoFinder(
+		GeoFinderConfig{
+			MmdbPath:    c.String("maxmind"),
+			AsnMmdbPath: c.String("maxmind-asn"),
+			Logger:      s.logger,
+		},
+	)
 
 	if err != nil {
 		s.logger.ErrorLog(err)
 	}
 
-	template, err := NewTemplate(TemplateConfig{
-		Template: c.String("nginx-template"),
-	})
+	influx, err := NewInfluxClient(
+		InfluxClientConfig{
+			Addr:              c.String("influx-url"),
+			Database:          c.String("influx-db"),
+			Logger:            s.logger,
+			Measurement:       c.String("influx-measurement"),
+			MeasurementOnline: c.String("influx-measurement-online"),
+		},
+	)
 
 	if err != nil {
 		s.logger.ErrorLog(err)
 	}
 
-	parser := NewSyslogParser(s.logger, ParserConfig{
-		PartsDelim:  constants.LOG_DELIM,
-		StreamDelim: constants.REQUEST_URI_DELIM,
-		Template:    template,
-	})
+	template, err := NewTemplate(
+		TemplateConfig{
+			Template: c.String("nginx-template"),
+		},
+	)
+
+	if err != nil {
+		s.logger.ErrorLog(err)
+	}
+
+	parser := NewSyslogParser(
+		s.logger,
+		ParserConfig{
+			PartsDelim:  constants.LOG_DELIM,
+			StreamDelim: constants.REQUEST_URI_DELIM,
+			Template:    template,
+		},
+	)
 
 	Notifier(
 		s.logger,
