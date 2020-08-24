@@ -61,4 +61,29 @@ var CliFlags = []cli.Flag{
 		Usage: "Шаблон для конфигурации форматов логов Nginx",
 		Value: "./template.conf",
 	},
+	&cli.IntFlag{
+		Name:  "pool-size",
+		Usage: "Максимальная емкость воркеров для обработки запросов",
+		Value: 4000000,
+	},
+	&cli.IntFlag{
+		Name:  "worker-pool-size",
+		Usage: "Максимальная емкость воркеров для обработки запросов",
+		Value: 2000000,
+	},
+	&cli.IntFlag{
+		Name:  "max-parallel",
+		Usage: "Максимальное количество параллельных обработчиков для входящих UPD запросов",
+		Value: 15,
+	},
+	&cli.IntFlag{
+		Name:  "worker-count",
+		Usage: "Максимальное количество обработчиков логов",
+		Value: 35,
+	},
+	&cli.IntFlag{
+		Name:  "sender-count",
+		Usage: "Максимальное количество и отправителей в Influx",
+		Value: 10,
+	},
 }
