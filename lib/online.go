@@ -56,6 +56,10 @@ func NewOnline(config OnlineConfig) Online {
 	return o
 }
 
+func (o *Online) SetScheduleCallback(c func(o *Online)) {
+	o.scheduleCallback = c
+}
+
 func (o *Online) Add(i UniqueIdentity) {
 	o.mt.Lock()
 	// смотрим существует ли канал в мапе, т.к. мы не знаем о канал ничего
