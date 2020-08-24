@@ -50,6 +50,9 @@ func NewOnline(config OnlineConfig) Online {
 	o.duration = config.OnlineDuration
 	o.scheduleCallback = config.ScheduleCallback
 
+	// run internal scheduling
+	go o.scheduler()
+
 	return o
 }
 
@@ -157,7 +160,7 @@ func (o Online) Contains(i UniqueIdentity) bool {
 
 // внутренний планировщик для отправки данны в influx
 // можно было бы и циклом
-func (o *Online) Scheduler() {
+func (o *Online) scheduler() {
 schedule:
 	time.Sleep(time.Second * time.Duration(o.duration))
 
