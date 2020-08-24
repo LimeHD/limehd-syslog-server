@@ -147,3 +147,27 @@ log_format csv
                 $bytes_sent;
 access_log syslog:server=127.0.0.1:PORT csv;
 ```
+
+### Тестирование под нагрузкой
+
+- [x] Создать nginx сервер с форматом логов выше
+- [x] Прописать конфиг к Yandex Tank под свою конфигурацию
+    <details>
+      <summary>load.yaml</summary>
+      
+      ```yaml
+        phantom:
+          address: 192.168.0.28:88 # [Target's address]:[target's port]
+          uris:
+            - /streaming/aaaa/324/vh1w/playlist.m3u8
+            ...
+          load_profile:
+            load_type: rps # schedule load by defining requests per second
+            schedule: line(1, 10000, 1m) # starting from 1rps growing linearly to 10rps during 10 minutes
+        console:
+          enabled: true # enable console output
+        telegraf:
+          enabled: false # let's disable telegraf monitoring for the first time
+      ```
+    </details>
+- [x] `$ docker run -v $(pwd):/var/loadtest -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent --net host -it direvius/yandex-tank`
