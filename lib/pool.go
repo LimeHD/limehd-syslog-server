@@ -45,6 +45,14 @@ func NewPool(c PoolConfig) *Pool {
 	return p
 }
 
+func (p *Pool) SetReceiverCallback(c func(p format.LogParts) (Receiver, error)) {
+	p.receiver = c
+}
+
+func (p *Pool) SetListenerCallback(c func(q Receiver)) {
+	p.listener = c
+}
+
 func (p Pool) Run(channel syslog.LogPartsChannel, parallel int) {
 	for i := 0; i < parallel; i++ {
 		go p.workerFn(&p, channel)
