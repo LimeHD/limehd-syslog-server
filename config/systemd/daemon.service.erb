@@ -9,6 +9,7 @@ WorkingDirectory = <%= current_path %>
 ExecStart = <%= current_path %>/bin/limehd-syslog-server --influx-url http://influx.iptv2022.com:8086 --influx-db influx --bind-address 0.0.0.0:1514 --influx-measurement mediastreaming --influx-measurement-online online_users --online-duration 300
 KillMode=mixed
 Restart=always
+Nice=1
 
 [Install]
 # Use default.target to autoboot user service
