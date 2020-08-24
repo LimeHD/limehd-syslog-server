@@ -31,23 +31,18 @@ var CliFlags = []cli.Flag{
 		Value: constants.DEFAULT_MAXMIND_ASN_DATABASE,
 	},
 	&cli.StringFlag{
-		Name:     "influx-url",
-		Usage:    "URL подключения к Influx, например: http://0.0.0.0:8086",
+		Name:  "statsd-address",
+		Usage: "Ip адрес и порт подключения к statsd, например: 127.0.0.1:8125",
+		Value: "127.0.0.1:8125",
+	},
+	&cli.StringFlag{
+		Name:     "statsd-measurement",
+		Usage:    "Название измерения (measurement) в statsd",
 		Required: true,
 	},
 	&cli.StringFlag{
-		Name:     "influx-db",
-		Usage:    "Название базы данных в Influx",
-		Required: true,
-	},
-	&cli.StringFlag{
-		Name:     "influx-measurement",
-		Usage:    "Название измерения (measurement) в Influx",
-		Required: true,
-	},
-	&cli.StringFlag{
-		Name:     "influx-measurement-online",
-		Usage:    "Название измерения (measurement) в Influx для счетчиков online пользователей",
+		Name:     "statsd-measurement-online",
+		Usage:    "Название измерения (measurement) в statsd для счетчиков online пользователей",
 		Required: true,
 	},
 	&cli.Int64Flag{

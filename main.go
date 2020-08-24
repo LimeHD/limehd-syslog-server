@@ -38,12 +38,11 @@ func main() {
 			logger.ErrorLog(err)
 		}
 
-		influx, err := lib.NewInfluxClient(lib.InfluxClientConfig{
-			Addr:              c.String("influx-url"),
-			Database:          c.String("influx-db"),
+		statsd, err := lib.NewStatsdClient(lib.StatsdConfig{
+			Address:           c.String("statsd-address"),
+			Measurement:       c.String("statsd-measurement"),
+			MeasurementOnline: c.String("statsd-measurement-online"),
 			Logger:            logger,
-			Measurement:       c.String("influx-measurement"),
-			MeasurementOnline: c.String("influx-measurement-online"),
 		})
 
 		if err != nil {
@@ -53,7 +52,7 @@ func main() {
 		lib.Notifier(
 			logger,
 			geoFinder,
-			influx,
+			statsd,
 		)
 
 		channel := make(syslog.LogPartsChannel)
@@ -93,13 +92,9 @@ func main() {
 			OnlineDuration: c.Int64("online-duration"),
 			ScheduleCallback: func(o *lib.Online) {
 				channelConnections := o.Connections()
-				err := influx.PointOnline(lib.InfluxOnlineRequestParams{
+				statsd.OnlinePoint(lib.StatsdOnlineTags{
 					Channels: channelConnections,
 				})
-
-				if err != nil {
-					logger.ErrorLog(err)
-				}
 
 				if logger.IsDevelopment() {
 					logger.InfoLog(fmt.Sprintf("Flushed connections: %v", channelConnections))
@@ -113,19 +108,14 @@ func main() {
 		})
 
 		sendToInfluxCallback := func(receive lib.Receiver) {
-			err = influx.Point(lib.InfluxRequestParams{
-				InfluxRequestTags: lib.InfluxRequestTags{
-					CountryName:  receive.Finder.GetCountryIsoCode(),
-					AsnNumber:    receive.Finder.GetOrganizationNumber(),
-					AsnOrg:       receive.Finder.GetOrganization(),
-					Channel:      receive.Parser.GetChannel(),
-					StreamServer: receive.Parser.GetClientAddr(),
-					Host:         receive.Parser.GetStreamingServer(),
-					Quality:      receive.Parser.GetQuality(),
-				},
-				InfluxRequestFields: lib.InfluxRequestFields{
-					BytesSent: receive.Parser.GetBytesSent(),
-				},
+			err = statsd.Point(float64(receive.Parser.GetBytesSent()), lib.StatsdStreamingTags{
+				CountryName:  receive.Finder.GetCountryIsoCode(),
+				AsnNumber:    receive.Finder.GetOrganizationNumber(),
+				AsnOrg:       receive.Finder.GetOrganization(),
+				Channel:      receive.Parser.GetChannel(),
+				StreamServer: receive.Parser.GetClientAddr(),
+				Host:         receive.Parser.GetStreamingServer(),
+				Quality:      receive.Parser.GetQuality(),
 			})
 
 			if err != nil {
