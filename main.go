@@ -53,7 +53,11 @@ func main() {
 			lib.OnlineConfig{
 				OnlineDuration: c.Int64("online-duration"),
 				ScheduleCallback: func(o *lib.Online) {
+					// запрашиваем агрегацию
 					channelConnections := o.Connections()
+					// передаем управление
+					o.Flush()
+
 					err := influx.PointOnline(lib.InfluxOnlineRequestParams{
 						Channels: channelConnections,
 					})
@@ -68,8 +72,6 @@ func main() {
 
 					logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
 					logger.InfoLog(o)
-
-					o.Flush()
 				},
 			},
 		)
