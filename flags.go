@@ -72,6 +72,11 @@ var CliFlags = []cli.Flag{
 		Value: 2000000,
 	},
 	&cli.IntFlag{
+		Name:  "error-pool-size",
+		Usage: "Максимальная емкость воркеров для обработки ошибок",
+		Value: 1000000,
+	},
+	&cli.IntFlag{
 		Name:  "max-parallel",
 		Usage: "Максимальное количество параллельных обработчиков для входящих UPD запросов",
 		Value: 15,
@@ -85,5 +90,10 @@ var CliFlags = []cli.Flag{
 		Name:  "sender-count",
 		Usage: "Максимальное количество и отправителей в Influx",
 		Value: 10,
+	},
+	&cli.IntFlag{
+		Name:  "error-handler-count",
+		Usage: "Максимальное количество и отправителей в Influx",
+		Value: 20,
 	},
 }
