@@ -312,6 +312,10 @@ func (l Log) GetClientAddr() string {
 	return l.client
 }
 
+func (l Log) GetUri() string {
+	return l._request.uri
+}
+
 // _logSlice methods
 
 func (sl _logSlice) getContent() string {
