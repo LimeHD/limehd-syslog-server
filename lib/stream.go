@@ -37,7 +37,9 @@ func (s *StreamQueue) All() []InfluxRequestParams {
 }
 
 func (s *StreamQueue) Flush() {
+	s.mt.Lock()
 	s.internal = []InfluxRequestParams{}
+	s.mt.Unlock()
 }
 
 func (s *StreamQueue) Scheduler(duration int) {
