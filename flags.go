@@ -56,6 +56,11 @@ var CliFlags = []cli.Flag{
 		Value:    300,
 		Required: true,
 	},
+	&cli.Int64Flag{
+		Name:  "stream-duration",
+		Usage: "За какой промежуток агрегировать данные по стримингу (в секундах)",
+		Value: 5,
+	},
 	&cli.StringFlag{
 		Name:  "nginx-template",
 		Usage: "Шаблон для конфигурации форматов логов Nginx",

@@ -33,6 +33,7 @@ type (
 		StreamServer string
 		Host         string
 		Quality      string
+		Time         time.Time
 	}
 
 	InfluxRequestFields struct {
@@ -82,7 +83,7 @@ func NewInfluxClient(config InfluxClientConfig) (*InfluxClient, error) {
 type tags map[string]string
 type fields map[string]interface{}
 
-func (i InfluxClient) Point(params InfluxRequestParams) error {
+func (i InfluxClient) Point(params []InfluxRequestParams) error {
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
 		Database: i.Database,
 	})
@@ -91,22 +92,29 @@ func (i InfluxClient) Point(params InfluxRequestParams) error {
 		return err
 	}
 
-	pt, err := i.createPoint(i.Measurement,
-		tags{
-			"country_name":     params.CountryName,
-			"asn_number":       strconv.FormatUint(uint64(params.AsnNumber), 10),
-			"asn_org":          params.AsnOrg,
-			"channel":          params.Channel,
-			"streaming_server": params.StreamServer,
-			"host":             params.Host,
-			"quality":          params.Quality,
-		},
-		fields{
-			"bytes_sent": params.BytesSent,
-		},
-	)
+	for _, param := range params {
+		pt, err := i.createPoint(i.Measurement,
+			tags{
+				"country_name":     param.CountryName,
+				"asn_number":       strconv.FormatUint(uint64(param.AsnNumber), 10),
+				"asn_org":          param.AsnOrg,
+				"channel":          param.Channel,
+				"streaming_server": param.StreamServer,
+				"host":             param.Host,
+				"quality":          param.Quality,
+			},
+			fields{
+				"bytes_sent": param.BytesSent,
+			},
+			param.Time,
+		)
 
-	bp.AddPoint(pt)
+		if err != nil {
+			return err
+		}
+
+		bp.AddPoint(pt)
+	}
 
 	if err := i.c.Write(bp); err != nil {
 		return err
@@ -133,6 +141,7 @@ func (i InfluxClient) PointOnline(params InfluxOnlineRequestParams) error {
 			fields{
 				"value": channel.Count(),
 			},
+			time.Now(),
 		)
 
 		if err != nil {
@@ -150,8 +159,8 @@ func (i InfluxClient) PointOnline(params InfluxOnlineRequestParams) error {
 }
 
 // todo временную метку нужно брать с самого запроса
-func (i InfluxClient) createPoint(m string, t tags, f fields) (*client.Point, error) {
-	return client.NewPoint(m, t, f, time.Now())
+func (i InfluxClient) createPoint(m string, t tags, f fields, tt time.Time) (*client.Point, error) {
+	return client.NewPoint(m, t, f, tt)
 }
 
 //

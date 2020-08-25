@@ -7,16 +7,26 @@ import (
 
 type (
 	Pool struct {
-		pool          chan Receiver
-		taskPool      chan func() (Receiver, error)
-		errorPool     chan error
-		listener      func(q Receiver) error
-		receiver      func(p format.LogParts) (Receiver, error)
-		errorHandler  func(err error)
-		workers       int
-		senders       int
+		// Пул для данных, готовых к отправлению
+		pool chan Receiver
+		// Пул асихронных задач для формирования пула готовых данных
+		taskPool chan func() (Receiver, error)
+		// Пул ошибок при формировании или отправке данных, обрабатываются в отдельных потоках
+		errorPool chan error
+		// Обработчик готовых данных
+		listener func(q Receiver) error
+		// Обработчик, формирующий данные
+		receiver func(p format.LogParts) (Receiver, error)
+		// Обработчик полученных ошибок
+		errorHandler func(err error)
+		// Колиечество паралельнно обрабатывающихся задач
+		workers int
+		// Колиечство паралельно работающих обработчиков данных (для отправки)
+		senders int
+		// Колиечство паралельных обработчиков ошибок
 		errorHandlers int
-		workerFn      func(pool *Pool, channel syslog.LogPartsChannel)
+		// Обработчик, принимающий данные из вне (по UDP)
+		workerFn func(pool *Pool, channel syslog.LogPartsChannel)
 	}
 	PoolConfig struct {
 		ListenerCallback    func(q Receiver) error
@@ -62,18 +72,21 @@ func (p *Pool) SetListenerCallback(c func(q Receiver) error) {
 	p.listener = c
 }
 
+// Запускает в несколько потоков обработку входящих данных
 func (p Pool) Run(channel syslog.LogPartsChannel, parallel int) {
 	for i := 0; i < parallel; i++ {
 		go p.workerFn(&p, channel)
 	}
 }
 
+// Создает новую асихронную задачу
 func (p Pool) Task(parts format.LogParts) {
 	p.taskPool <- func() (Receiver, error) {
 		return p.receiver(parts)
 	}
 }
 
+// Слушаем все наши потоки данных, задач и ошибок
 func (p Pool) listen() {
 	for i := 0; i < p.workers; i++ {
 		go p.taskManager()

@@ -89,6 +89,7 @@ func (o Online) Count() int {
 	return len(o.Connections())
 }
 
+// Общая сумма по всем каналам
 func (o Online) Total() int {
 	o.mt.RLock()
 	total := 0
@@ -99,6 +100,7 @@ func (o Online) Total() int {
 	return total
 }
 
+// Возвращает ТОП первых N каналов
 func (o Online) Top(n int) SortedList {
 	s := o.sorted()
 	if len(s) < n {
