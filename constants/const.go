@@ -39,3 +39,4 @@ const INVALID_PARTS_LENGHT = "Не валидная длина логов Nginx,
 const LOG_FILE_ON_EXIST = "Файл для логов не обнаружен, будет создан новый"
 const TEMPLATE_FILE_NOT_EXIST = "Файл конфигурации не найден"
 const TEMPLATE_FILE_NOT_LOADED = "Не удалось загрузить шаблон"
+const NOT_AVAILABLE_URI = "Данный тип ссылок не поддерживается"

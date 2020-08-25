@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/LimeHD/limehd-syslog-server/constants"
 	"github.com/LimeHD/limehd-syslog-server/lib"
 	"github.com/urfave/cli"
 	"gopkg.in/mcuadros/go-syslog.v2"
@@ -117,6 +119,10 @@ func main() {
 			if err != nil {
 				logger.ErrorLog(err)
 				return lib.Receiver{}, err
+			}
+
+			if !result.IsAvailableUri() {
+				return lib.Receiver{}, errors.New(fmt.Sprintf("%s: %s", constants.NOT_AVAILABLE_URI, result.GetUri()))
 			}
 
 			finderResult, err := finder.Find(result.GetRemoteAddr())
