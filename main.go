@@ -168,7 +168,7 @@ func main() {
 		})
 
 		go online.Scheduler()
-		go stream.Scheduler(5)
+		go stream.Scheduler(c.Int("stream-duration"))
 
 		go func(channel syslog.LogPartsChannel) {
 			pool.Run(channel, c.Int("max-parallel"))
