@@ -74,7 +74,7 @@ func main() {
 			},
 		)
 
-		sendToInfluxCallback := func(receive lib.Receiver) error {
+		aggregationCallback := func(receive lib.Receiver) error {
 			stream.Add(lib.InfluxRequestParams{
 				InfluxRequestTags: lib.InfluxRequestTags{
 					CountryName:  receive.Finder.GetCountryIsoCode(),
@@ -135,7 +135,7 @@ func main() {
 
 		pool := lib.NewPool(
 			lib.PoolConfig{
-				ListenerCallback: sendToInfluxCallback,
+				ListenerCallback: aggregationCallback,
 				ReceiverCallback: receiveAndParseLogsCallback,
 				PoolSize:         c.Int("pool-size"),
 				WorkersCount:     c.Int("worker-count"),
