@@ -9,6 +9,7 @@ import (
 	"gopkg.in/mcuadros/go-syslog.v2"
 	"gopkg.in/mcuadros/go-syslog.v2/format"
 	"os"
+	"time"
 )
 
 const version = "0.3.11" // Automaticaly updated // Automaticaly updated // Automaticaly updated // Automaticaly updated
@@ -27,7 +28,7 @@ func main() {
 		finder := service.GetFinder()
 		influx := service.GetInfluxClient()
 		parser := service.GetParser()
-
+		stream := service.GetStream()
 		lib.StartupMessage(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
 
 		channel := make(syslog.LogPartsChannel)
@@ -74,26 +75,21 @@ func main() {
 		)
 
 		sendToInfluxCallback := func(receive lib.Receiver) error {
-			err = influx.Point(
-				lib.InfluxRequestParams{
-					InfluxRequestTags: lib.InfluxRequestTags{
-						CountryName:  receive.Finder.GetCountryIsoCode(),
-						AsnNumber:    receive.Finder.GetOrganizationNumber(),
-						AsnOrg:       receive.Finder.GetOrganization(),
-						Channel:      receive.Parser.GetChannel(),
-						StreamServer: receive.Parser.GetClientAddr(),
-						Host:         receive.Parser.GetStreamingServer(),
-						Quality:      receive.Parser.GetQuality(),
-					},
-					InfluxRequestFields: lib.InfluxRequestFields{
-						BytesSent: receive.Parser.GetBytesSent(),
-					},
+			stream.Add(lib.InfluxRequestParams{
+				InfluxRequestTags: lib.InfluxRequestTags{
+					CountryName:  receive.Finder.GetCountryIsoCode(),
+					AsnNumber:    receive.Finder.GetOrganizationNumber(),
+					AsnOrg:       receive.Finder.GetOrganization(),
+					Channel:      receive.Parser.GetChannel(),
+					StreamServer: receive.Parser.GetClientAddr(),
+					Host:         receive.Parser.GetStreamingServer(),
+					Quality:      receive.Parser.GetQuality(),
+					Time:         time.Now(),
 				},
-			)
-
-			if err != nil {
-				return err
-			}
+				InfluxRequestFields: lib.InfluxRequestFields{
+					BytesSent: receive.Parser.GetBytesSent(),
+				},
+			})
 
 			// Пользователи онлайн
 			unique := lib.UniqueIdentity{
@@ -158,7 +154,22 @@ func main() {
 			},
 		)
 
+		stream.SetScheduleHandler(func(s *lib.StreamQueue) {
+			// аолучаем накопленные данные
+			streams := s.All()
+			// отдаем управление для нового накопления
+			s.Flush()
+
+			if err := influx.Point(streams); err != nil {
+				logger.ErrorLog(err)
+			}
+
+			logger.InfoLog("Stream scheduler done!")
+		})
+
 		go online.Scheduler()
+		go stream.Scheduler(5)
+
 		go func(channel syslog.LogPartsChannel) {
 			pool.Run(channel, c.Int("max-parallel"))
 		}(channel)
