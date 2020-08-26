@@ -15,25 +15,15 @@ type (
 		mt               *sync.RWMutex
 		connections      map[string]ChannelConnections
 		lastFlushedAt    int64
-		duration         int64
 		scheduleCallback func(*Online)
 	}
-
-	OnlineConfig struct {
-		// 5 минутные интевалы, настраиваются из вне
-		OnlineDuration   int64
-		ScheduleCallback func(*Online)
-	}
-
 	ChannelConnections struct {
 		connections map[string]bool
 	}
-
 	UniqueCombination struct {
 		Ip        string
 		UserAgent string
 	}
-
 	// уникальные пользователи на конкретный канал
 	// определяются из хеша комбинаций ip и user-agent
 	UniqueIdentity struct {
@@ -42,19 +32,17 @@ type (
 	}
 )
 
-func NewOnline(config OnlineConfig) Online {
+func NewOnline() Online {
 	o := Online{}
 	o.mt = &sync.RWMutex{}
 	o.setFlushedAt()
 	o.connections = map[string]ChannelConnections{}
-	o.duration = config.OnlineDuration
-	o.scheduleCallback = config.ScheduleCallback
 
 	return o
 }
 
-func (o *Online) SetScheduleCallback(c func(o *Online)) {
-	o.scheduleCallback = c
+func (o *Online) SetScheduleHandler(handler func(o *Online)) {
+	o.scheduleCallback = handler
 }
 
 func (o *Online) Add(i UniqueIdentity) {
@@ -163,9 +151,9 @@ func (o Online) Contains(i UniqueIdentity) bool {
 
 // внутренний планировщик для отправки данны в influx
 // можно было бы и циклом
-func (o *Online) Scheduler() {
+func (o *Online) Scheduler(duration int64) {
 schedule:
-	time.Sleep(time.Second * time.Duration(o.duration))
+	time.Sleep(time.Second * time.Duration(duration))
 
 	o.scheduleCallback(o)
 
@@ -177,14 +165,6 @@ func (o Online) Peek(i UniqueIdentity) {
 	if !o.Contains(i) {
 		o.Add(i)
 	}
-}
-
-// deprecated в пользу планировщика
-// настало ли время сбросить данные
-// todo можно сделать как scheduler в отдельной гоурутине
-// todo с интевалом равным аргументу -online-duration
-func (o Online) IsExpiredFlush() bool {
-	return time.Now().Unix() >= o.lastFlushedAt+o.duration
 }
 
 // private

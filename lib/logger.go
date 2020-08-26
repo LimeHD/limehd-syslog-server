@@ -8,6 +8,7 @@ import (
 )
 
 type Logger interface {
+	Debug(msg interface{})
 	ErrorLog(error error)
 	InfoLog(msg interface{})
 	WarningLog(msg interface{})
@@ -59,6 +60,12 @@ func (f FileLogger) ErrorLog(error error) {
 		log.Fatalf("[LIMEHD SYSLOG ERROR]: %v", error)
 	} else {
 		f.WarningLog(error)
+	}
+}
+
+func (f FileLogger) Debug(msg interface{}) {
+	if f.IsDevelopment() {
+		f.InfoLog(msg)
 	}
 }
 

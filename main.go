@@ -29,6 +29,8 @@ func main() {
 		influx := service.GetInfluxClient()
 		parser := service.GetParser()
 		stream := service.GetStream()
+		online := service.GetOnline()
+
 		lib.StartupMessage(fmt.Sprintf("LimeHD Syslog Server v%s", version), logger)
 
 		channel := make(syslog.LogPartsChannel)
@@ -49,34 +51,8 @@ func main() {
 			logger.ErrorLog(err)
 		}
 
-		online := lib.NewOnline(
-			lib.OnlineConfig{
-				OnlineDuration: c.Int64("online-duration"),
-				ScheduleCallback: func(o *lib.Online) {
-					// запрашиваем агрегацию
-					channelConnections := o.Connections()
-					// передаем управление
-					o.Flush()
-
-					err := influx.PointOnline(lib.InfluxOnlineRequestParams{
-						Channels: channelConnections,
-					})
-
-					if err != nil {
-						logger.ErrorLog(err)
-					}
-
-					if logger.IsDevelopment() {
-						logger.InfoLog(fmt.Sprintf("Flushed connections: %v", channelConnections))
-					}
-
-					logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
-					logger.InfoLog(o)
-				},
-			},
-		)
-
 		aggregationCallback := func(receive lib.Receiver) error {
+			// трафик
 			stream.Add(lib.InfluxRequestParams{
 				InfluxRequestTags: lib.InfluxRequestTags{
 					CountryName:  receive.Finder.GetCountryIsoCode(),
@@ -103,11 +79,7 @@ func main() {
 			}
 
 			online.Peek(unique)
-
-			// todo удалить
-			if logger.IsDevelopment() {
-				logger.InfoLog(online.Connections())
-			}
+			logger.Debug(online.Connections())
 
 			return nil
 		}
@@ -156,6 +128,25 @@ func main() {
 			},
 		)
 
+		online.SetScheduleHandler(func(o *lib.Online) {
+			// запрашиваем агрегацию
+			channelConnections := o.Connections()
+			// передаем управление
+			o.Flush()
+
+			err := influx.PointOnline(lib.InfluxOnlineRequestParams{
+				Channels: channelConnections,
+			})
+
+			if err != nil {
+				logger.ErrorLog(err)
+			}
+
+			logger.Debug(fmt.Sprintf("Flushed connections: %v", channelConnections))
+			logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
+			logger.InfoLog(o)
+		})
+
 		stream.SetScheduleHandler(func(s *lib.StreamQueue) {
 			// аолучаем накопленные данные
 			streams := s.All()
@@ -169,7 +160,7 @@ func main() {
 			logger.InfoLog("Stream scheduler done!")
 		})
 
-		go online.Scheduler()
+		go online.Scheduler(c.Int64("online-duration"))
 		go stream.Scheduler(c.Int("stream-duration"))
 
 		go func(channel syslog.LogPartsChannel) {

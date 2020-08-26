@@ -11,6 +11,7 @@ type Service struct {
 	finder   *GeoFinder
 	parser   *SyslogParser
 	stream   *StreamQueue
+	online   *Online
 	template *Template
 	// todo
 	// online, pool
@@ -74,6 +75,7 @@ func NewService(c *cli.Context) *Service {
 	)
 
 	stream := NewStream()
+	online := NewOnline()
 
 	Notifier(
 		s.logger,
@@ -85,6 +87,7 @@ func NewService(c *cli.Context) *Service {
 	s.finder = &geoFinder
 	s.parser = &parser
 	s.stream = stream
+	s.online = &online
 
 	return s
 }
@@ -107,4 +110,8 @@ func (s Service) GetFinder() *GeoFinder {
 
 func (s Service) GetStream() *StreamQueue {
 	return s.stream
+}
+
+func (s Service) GetOnline() *Online {
+	return s.online
 }
