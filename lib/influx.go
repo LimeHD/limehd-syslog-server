@@ -67,11 +67,8 @@ func NewInfluxClient(config InfluxClientConfig) (*InfluxClient, error) {
 	}
 
 	d, s, err := i.c.Ping(time.Second * 5)
-
-	if i._logger.IsDevelopment() {
-		i._logger.InfoLog(fmt.Sprintf("Connect to Influx server version %s", s))
-		i._logger.InfoLog(fmt.Sprintf("Connection duration is %v", d))
-	}
+	i._logger.Debug(fmt.Sprintf("Connect to Influx server version %s", s))
+	i._logger.Debug(fmt.Sprintf("Connection duration is %v", d))
 
 	if err != nil {
 		return nil, err
