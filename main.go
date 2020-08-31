@@ -79,7 +79,6 @@ func main() {
 			}
 
 			online.Peek(unique)
-			logger.Debug(online.Connections())
 
 			return nil
 		}
@@ -142,9 +141,7 @@ func main() {
 				logger.ErrorLog(err)
 			}
 
-			logger.Debug(fmt.Sprintf("Flushed connections: %v", channelConnections))
-			logger.InfoLog(fmt.Sprintf("Total %d", o.Total()))
-			logger.InfoLog(o)
+			logger.InfoLog("The online scheduler did its job successfully!")
 		})
 
 		stream.SetScheduleHandler(func(s *lib.StreamQueue) {
@@ -157,7 +154,7 @@ func main() {
 				logger.ErrorLog(err)
 			}
 
-			logger.InfoLog("Stream scheduler done!")
+			logger.InfoLog("The stream scheduler did its job successfully!")
 		})
 
 		go online.Scheduler(c.Int64("online-duration"))
